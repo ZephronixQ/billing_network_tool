@@ -1,0 +1,29 @@
+📁 Структура проекта
+
+billing_network_tool/
+│
+├── main.py
+│
+├── config/
+│   ├── devices.py
+│   ├── credentials.py
+│
+├── core/
+│   ├── __init__.py
+│
+│   ├── settings.py
+│   ├── regex.py
+│   ├── utils.py
+│
+│   ├── telnet/
+│   │   ├── __init__.py
+│   │   ├── connection.py
+│   │   └── commands.py
+│
+│   ├── collectors/
+│   │   ├── __init__.py
+│   │   └── uncfg_onu.py
+│
+│   └── output/
+│       ├── __init__.py
+│       └── table.py
