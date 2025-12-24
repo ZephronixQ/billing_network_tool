@@ -1,34 +1,25 @@
 import asyncio
-import logging
+from cli.args import parse_args
+from cli.help import print_help
+from core.operations.onu.uncfg import run_uncfg
+from core.operations.onu.search import run_sn_search
 
-from config.devices import SWITCHES
-from cli.help import build_arg_parser
-from core.collectors.uncfg_onu import collect_all_uncfg_onu
-from core.collectors.onu_by_sn import find_onu_by_serial
-from core.output.uncfg_onu_table import print_uncfg_onu_table
-from core.output.onu_sn_table import print_onu_sn_table
+async def main():
+    args = parse_args()
 
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s"
-)
-logging.getLogger("telnetlib3").setLevel(logging.ERROR)
-
-async def async_main():
-    parser = build_arg_parser()
-    args = parser.parse_args()
+    if args.help:
+        print_help()
+        return
 
     if args.uncfg:
-        results = await collect_all_uncfg_onu(SWITCHES)
-        print_uncfg_onu_table(results)
+        await run_uncfg()
+        return
 
-    elif args.sn:
-        result = await find_onu_by_serial(SWITCHES, args.sn)
-        if result:
-            print_onu_sn_table(result)
-        else:
-            print("❌ ONU not found")
+    if args.sn:
+        await run_sn_search(args.sn)
+        return
+
+    print_help()
 
 if __name__ == "__main__":
-    asyncio.run(async_main())
+    asyncio.run(main())

@@ -1,38 +1,30 @@
-import argparse
+from output.colors import BLUE, GREEN, YELLOW, RESET
 
+def print_help():
+    print(f"""
+{BLUE}Billing Network Tool{RESET}
 
-def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="billing-network-tool",
-        description="OLT / ONU management utility",
-        formatter_class=argparse.RawTextHelpFormatter,
-        epilog="""
+Usage:
+  python3 main.py [OPTIONS]
+
+Options:
+  {GREEN}--uncfg{RESET}        Show unregistered ONU on all OLTs
+  {GREEN}--sn <SERIAL>{RESET}  Search ONU by serial number
+  {GREEN}--help{RESET}         Show this help message
+
 Examples:
-  Show unregistered ONU on all OLTs:
-    python3 main.py --uncfg
+  python3 main.py --uncfg
+      Display all unregistered ONU on configured switches.
 
-  Find ONU by serial number:
-    python3 main.py --sn ZTEG12345678
+  python3 main.py --sn ZTEG12345678
+      Search for ONU with serial number ZTEG12345678 on all switches.
 
 Notes:
-  • Commands are mutually exclusive
-  • Tool exits immediately after first match (SN search)
-  • Output format is unified for all commands
-"""
-    )
-
-    group = parser.add_mutually_exclusive_group(required=True)
-
-    group.add_argument(
-        "--uncfg",
-        action="store_true",
-        help="Show unregistered ONU on all OLTs"
-    )
-
-    group.add_argument(
-        "--sn",
-        metavar="SERIAL",
-        help="Find ONU by serial number"
-    )
-
-    return parser
+  - You can only run one operation at a time (either --uncfg or --sn).
+  - CLI is designed to be extensible for future operations like:
+      - Port reload/shutdown
+      - ONU registration/deletion
+      - Diagnostics (IPoE/GPON)
+      - Port utilization statistics
+      - Vendor-specific commands
+""")
