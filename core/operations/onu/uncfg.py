@@ -1,20 +1,15 @@
 import asyncio
-from core.connection.telnet import connect, send
-from core.parsers.onu import parse_uncfg
-from output.table import print_uncfg_table
 from config.secrets import SWITCHES
+from output.table import print_uncfg_table
+from core.operations.onu.vendors.zte.c320.v_current.adapter import ZTEC320Adapter
 
 SEM = asyncio.Semaphore(len(SWITCHES))
+adapter = ZTEC320Adapter()
 
 async def fetch_uncfg(host):
     async with SEM:
         try:
-            reader, writer = await connect(host)
-            await send(reader, writer, "terminal length 0")
-            output = await send(reader, writer, "show gpon onu uncfg")
-            writer.close()
-            await writer.wait_closed()
-            onus = parse_uncfg(output)
+            onus = await adapter.fetch_uncfg(host)
             return {"host": host, "onus": onus} if onus else None
         except Exception:
             return None
