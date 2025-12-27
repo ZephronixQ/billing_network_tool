@@ -29,3 +29,22 @@ async def send(reader, writer, command: str, timeout=0.3) -> str:
         pass
 
     return output
+
+async def send_bulk(reader, writer, commands: list, timeout=0.3) -> str:
+    marker = "__END__"
+    payload = "\n".join(commands + [f"echo {marker}"]) + "\n"
+    writer.write(payload)
+
+    buf = ""
+    try:
+        while True:
+            chunk = await asyncio.wait_for(reader.read(4096), timeout)
+            if not chunk:
+                break
+            buf += chunk
+            if marker in chunk:
+                break
+    except asyncio.TimeoutError:
+        pass
+
+    return buf

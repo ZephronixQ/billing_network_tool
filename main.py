@@ -14,16 +14,19 @@ async def main():
         print_help()
         return
 
-    if args.uncfg:
-        await run_uncfg()
-        return
-
     if args.sn:
         await run_sn_search(args.sn)
+        return
+
+    if args.uncfg:
+        await run_uncfg()
         return
 
     print_help()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass

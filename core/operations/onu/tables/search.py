@@ -1,10 +1,7 @@
-from tabulate import tabulate
 from output.colors import GREEN, BLUE, YELLOW, MAGENTA, RESET
-
+from output.table_base import render_table
 
 def print_sn_table(data):
-    print(f"\n{GREEN}✅ ONU FOUND{RESET}")
-
     headers = [
         f"{BLUE}IP{RESET}",
         f"{BLUE}PORT{RESET}",
@@ -12,11 +9,15 @@ def print_sn_table(data):
         f"{BLUE}ID{RESET}",
     ]
 
-    row = [
+    rows = [[
         f"{GREEN}{data['host']}{RESET}",
         f"{YELLOW}{data['port']}{RESET}",
         f"{MAGENTA}{data['serial']}{RESET}",
         f"{YELLOW}{data['remote_id']}{RESET}" if data["remote_id"] else "-",
-    ]
+    ]]
 
-    print(tabulate([row], headers=headers, tablefmt="fancy_grid", stralign="center"))
+    render_table(
+        rows,
+        headers,
+        title=f"\n{GREEN}✅ ONU FOUND{RESET}",
+    )

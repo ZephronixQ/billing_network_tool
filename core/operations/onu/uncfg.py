@@ -1,10 +1,10 @@
 import asyncio
 from config.secrets import SWITCHES
-from output.table import print_uncfg_table
-from core.operations.onu.vendors.zte.c320.v_current.adapter import ZTEC320Adapter
+from core.operations.onu.tables.uncfg import print_uncfg_table
+from core.operations.onu.adapters.zte_zxan_olt import ZteZxanOltAdapter
 
 SEM = asyncio.Semaphore(len(SWITCHES))
-adapter = ZTEC320Adapter()
+adapter = ZteZxanOltAdapter()
 
 async def fetch_uncfg(host):
     async with SEM:

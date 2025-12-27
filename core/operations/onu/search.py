@@ -1,10 +1,11 @@
 import asyncio
 from config.secrets import SWITCHES
-from core.operations.onu.vendors.zte.c320.v_current.adapter import ZTEC320Adapter
+from core.operations.onu.adapters.zte_zxan_olt import ZteZxanOltAdapter
 from core.operations.onu.tables.search import print_sn_table
+from core.operations.onu.tables.ip_status import print_ip_status
 
 SEM = asyncio.Semaphore(len(SWITCHES))
-adapter = ZTEC320Adapter()
+adapter = ZteZxanOltAdapter()
 
 async def search_on_switch(host: str, serial: str):
     async with SEM:
@@ -23,7 +24,12 @@ async def run_sn_search(serial: str):
                 for t in tasks:
                     if not t.done():
                         t.cancel()
+                
                 print_sn_table(result)
+
+                if result.get("ip_service"):
+                    print_ip_status(result["ip_service"])
+
                 return
         print(f"❌ ONU {serial} not found on any switch")
     except asyncio.CancelledError:
