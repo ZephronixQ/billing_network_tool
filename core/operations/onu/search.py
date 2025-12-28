@@ -2,10 +2,13 @@
 
 import asyncio
 from config.secrets import SWITCHES
+
 from core.operations.onu.adapters.zte_zxan_olt import ZteZxanOltAdapter
 from core.operations.onu.tables.search import print_sn_table
 from core.operations.onu.tables.ip_status import print_ip_status
 from core.operations.onu.tables.pon_power import print_pon_power_table
+from core.operations.onu.tables.oper_speed import print_oper_speed_table
+
 
 adapter = ZteZxanOltAdapter()
 SEM = asyncio.Semaphore(len(SWITCHES))
@@ -27,22 +30,38 @@ async def run_sn_search(serial: str):
 
     for task in asyncio.as_completed(tasks):
         result = await task
-        if result:
-            # стопаем остальные OLT
-            for t in tasks:
-                if t is not task:
-                    t.cancel()
+        if not result:
+            continue
 
-            # ===== 1. MAIN / ID =====
-            print_sn_table(result)
+        # стопаем остальные OLT
+        for t in tasks:
+            if t is not task:
+                t.cancel()
 
-            # ===== 2. IP STATUS =====
+        # ===== 1. MAIN / ID =====
+        print_sn_table(result)
+
+        # ===== 2. IP STATUS =====
+        if result.get("ip_service"):
             print_ip_status(result["ip_service"])
+        else:
+            print("\n🌐 IP STATUS\n— no IP / MAC / VLAN information —")
 
-            # ===== 3. PON POWER (ВСЕГДА ПОСЛЕДНИМ) =====
-            if result.get("pon_power"):
-                print_pon_power_table(result["pon_power"])
+        # ===== 3. PON POWER =====
+        if result.get("pon_power"):
+            print_pon_power_table(result["pon_power"])
+        else:
+            print("\n📡 PON POWER LEVELS\n— no optical data available —")
 
-            return
+        # ===== 4. OPERATE / SPEED =====
+        if result.get("remote_onu") and result.get("iface_speed"):
+            print_oper_speed_table(
+                result["remote_onu"],
+                result["iface_speed"]
+            )
+        else:
+            print("\n⚡ OPERATE / SPEED\n— no interface speed data available —")
+
+        return
 
     print(f"\n❌ ONU {serial} not found on any switch")
