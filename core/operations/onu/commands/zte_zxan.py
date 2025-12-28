@@ -7,3 +7,5 @@ SHOW_IP_SERVICE = "show ip-service user status gpon-onu_{iface}"
 SHOW_DHCP_SNOOPING = (
     "show ip dhcp snooping dynamic port pon gpon-onu_{iface} sport 1"
 )
+
+SHOW_PON_POWER = "show pon power attenuation gpon-onu_{iface}"

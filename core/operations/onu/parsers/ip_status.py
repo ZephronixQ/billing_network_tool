@@ -12,7 +12,7 @@ EMPTY = {
     "vlan": "-",
 }
 
-def parse_ip_status(output: str) -> dict:
+def parse_ip_status(output: str) -> dict | None:
     for raw in output.splitlines():
         line = clean_line(raw)
 
@@ -36,4 +36,5 @@ def parse_ip_status(output: str) -> dict:
                     "vlan": parts[3],
                 }
 
-    return EMPTY
+    return None
+

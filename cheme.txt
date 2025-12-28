@@ -1,64 +1,88 @@
 billing_network_tool/
 │
-├── main.py                     # точка входа (НЕ логика)
+├── main.py
+│   # Точка входа. Только:
+│   # - парсинг CLI
+│   # - маршрутизация команд
+│   # - asyncio.run()
 │
 ├── cli/
-│   ├── args.py                 # argparse / флаги
-│   ├── help.py                 # документация CLI (как git/docker)
-│   └── commands.py             # роутинг команд -> handlers
+│   ├── args.py
+│   │   # argparse / флаги (--sn, --uncfg, --help)
+│   │
+│   ├── commands.py
+│   │   # CLI → core.operations маппинг
+│   │
+│   └── help.py
+│       # Текстовая документация CLI
 │
 ├── config/
-│   ├── devices.yaml            # OLT / SW / vendor / model / version
-│   ├── credentials.yaml        # telnet / snmp (в будущем)
-│   └── logging.conf
+│   ├── devices.yaml
+│   │   # OLT / SW список
+│   │
+│   └── secrets.py
+│       # логины, пароли, порты (НЕ логика)
 │
 ├── core/
 │   ├── connection/
-│   │   ├── telnet.py           # единый telnet-клиент
-│   │   └── snmp.py             # SNMP (будущее)
+│   │   └── telnet.py
+│   │       # connect()
+│   │       # send()
+│   │       # send_bulk()
 │   │
-│   ├── vendors/
-│   │   ├── zte/
-│   │   │   ├── c320/
-│   │   │   │   ├── v2_1.py
-│   │   │   │   ├── v2_3.py
-│   │   │   │   └── base.py
-│   │   ├── dlink/
-│   │   ├── eltex/
-│   │   └── snr/
-│   │
-│   ├── operations/
-│   │   ├── onu/
-│   │   │   ├── uncfg.py        # поиск незарегистрированных ONU
-│   │   │   ├── register.py
-│   │   │   ├── delete.py
-│   │   │   └── search.py       # (будущий перенос onu_finder)
-│   │   │
-│   │   ├── ports/
-│   │   │   ├── reload.py       # IPOE / GPON
-│   │   │   ├── shutdown.py
-│   │   │   └── utilization.py  # занято/свободно/%
-│   │   │
-│   │   └── diagnostics/
-│   │       ├── ipoe.py
-│   │       └── gpon.py
-│   │
-│   ├── parsers/
-│   │   ├── onu.py
-│   │   ├── ports.py
-│   │   └── common.py
-│   │
-│   └── models/
-│       ├── device.py
-│       ├── onu.py
-│       └── port.py
+│   └── operations/
+│       └── onu/
+│           │
+│           ├── adapters/
+│           │   └── zte_zxan_olt.py
+│           │       # ZteZxanOltAdapter
+│           │       # - search_by_sn()
+│           │       # - fetch_uncfg()
+│           │
+│           ├── commands/
+│           │   └── zte_zxan.py
+│           │       # SHOW_UNCFG
+│           │       # SHOW_BY_SN
+│           │       # SHOW_ONU_CFG
+│           │       # SHOW_IP_SERVICE
+│           │       # SHOW_DHCP_SNOOPING
+│           │
+│           ├── parsers/
+│           │   ├── __init__.py
+│           │   │
+│           │   ├── common.py
+│           │   │   # clean_line()
+│           │   │
+│           │   ├── search.py
+│           │   │   # parse_onu_interface()
+│           │   │   # parse_remote_id()
+│           │   │
+│           │   ├── ip_status.py
+│           │   │   # parse_ip_status()
+│           │   │
+│           │   └── uncfg.py
+│           │       # parse_uncfg()
+│           │
+│           ├── tables/
+│           │   ├── search.py
+│           │   │   # print_sn_table()
+│           │   │
+│           │   ├── ip_status.py
+│           │   │   # print_ip_status()
+│           │   │
+│           │   └── uncfg.py
+│           │       # print_uncfg_table()
+│           │
+│           └── __init__.py
 │
 ├── output/
-│   ├── table.py                # ЕДИНЫЙ шаблон таблиц
 │   ├── colors.py
-│   └── summary.py
+│   │   # ANSI-коды
+│   │
+│   ├── table_base.py
+│   │   # render_table() — общий шаблон табличного вывода
+│   │
+│   └── __init__.py
 │
-└── utils/
-    ├── regex.py
-    ├── cleaners.py
-    └── exceptions.py
+└── README.md
+    # (опционально)
