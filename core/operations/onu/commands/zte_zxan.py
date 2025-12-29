@@ -12,3 +12,5 @@ SHOW_PON_POWER = "show pon power attenuation gpon-onu_{iface}"
 
 SHOW_STATUS = "show gpon remote-onu interface eth gpon-onu_{iface}"
 SHOW_INTERFACE = "show interface gpon-onu_{iface}"
+
+SHOW_DETAIL_LOGS = "show gpon onu detail-info gpon-onu_{iface}"

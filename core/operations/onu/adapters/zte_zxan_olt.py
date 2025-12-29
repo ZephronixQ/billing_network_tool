@@ -10,6 +10,7 @@ from core.operations.onu.commands.zte_zxan import (
     SHOW_PON_POWER,
     SHOW_STATUS,
     SHOW_INTERFACE,
+    SHOW_DETAIL_LOGS,
 )
 
 from core.operations.onu.parsers.search import (
@@ -22,6 +23,7 @@ from core.operations.onu.parsers.speed import (
     parse_remote_onu_interface,
     parse_interface_speed,
 )
+from core.operations.onu.parsers.detail_logs import parse_onu_detail_logs
 
 
 class ZteZxanOltAdapter:
@@ -30,7 +32,7 @@ class ZteZxanOltAdapter:
 
         try:
             # =========================================================
-            # FLUSH CLI (WELCOME / PROMPT / NOISE)
+            # FLUSH CLI
             # =========================================================
             try:
                 while True:
@@ -39,7 +41,7 @@ class ZteZxanOltAdapter:
                 pass
 
             # =========================================================
-            # 1. SEARCH ONU (MINIMAL & CLEAN)
+            # 1. SEARCH ONU
             # =========================================================
             raw_find = await send_bulk(
                 reader,
@@ -56,7 +58,7 @@ class ZteZxanOltAdapter:
                 return None
 
             # =========================================================
-            # 2. COLLECT ALL DATA (ONE SESSION)
+            # 2. COLLECT ALL DATA (ONE SESSION, ONE REQUEST)
             # =========================================================
             raw_all = await send_bulk(
                 reader,
@@ -68,12 +70,13 @@ class ZteZxanOltAdapter:
                     SHOW_PON_POWER.format(iface=iface),
                     SHOW_STATUS.format(iface=iface),
                     SHOW_INTERFACE.format(iface=iface),
+                    SHOW_DETAIL_LOGS.format(iface=iface),
                 ],
-                timeout=5.0,
+                timeout=2,
             )
 
             # =========================================================
-            # 3. PARSING
+            # 3. PARSING (ВСЁ ИЗ raw_all)
             # =========================================================
             remote_id = parse_remote_id(raw_all)
 
@@ -83,7 +86,6 @@ class ZteZxanOltAdapter:
             )
 
             pon_power = parse_pon_power(raw_all)
-
             remote_onu = parse_remote_onu_interface(raw_all)
             iface_speed = parse_interface_speed(raw_all)
 
@@ -99,6 +101,7 @@ class ZteZxanOltAdapter:
                 "pon_power": pon_power,
                 "remote_onu": remote_onu,
                 "iface_speed": iface_speed,
+                "detail_logs": parse_onu_detail_logs(raw_all),
             }
 
         finally:

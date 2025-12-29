@@ -9,6 +9,8 @@ from core.operations.onu.tables.ip_status import print_ip_status
 from core.operations.onu.tables.pon_power import print_pon_power_table
 from core.operations.onu.tables.oper_speed import print_oper_speed_table
 
+from core.operations.onu.tables.detail_logs import print_onu_detail_logs_table
+from output.colors import CYAN, RESET
 
 adapter = ZteZxanOltAdapter()
 SEM = asyncio.Semaphore(len(SWITCHES))
@@ -61,6 +63,11 @@ async def run_sn_search(serial: str):
             )
         else:
             print("\n⚡ OPERATE / SPEED\n— no interface speed data available —")
+        
+        # ===== DETAIL LOGS =====
+        if result.get("detail_logs"):
+            print(f"\n{CYAN}📝 ONU DETAIL LOGS{RESET}")
+            print_onu_detail_logs_table(result["detail_logs"])
 
         return
 
