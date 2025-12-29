@@ -17,13 +17,39 @@ from core.operations.onu.parsers.search import (
     parse_onu_interface,
     parse_remote_id,
 )
-from core.operations.onu.parsers.ip_status import parse_ip_status
 from core.operations.onu.parsers.pon_power import parse_pon_power
 from core.operations.onu.parsers.speed import (
     parse_remote_onu_interface,
     parse_interface_speed,
 )
 from core.operations.onu.parsers.detail_logs import parse_onu_detail_logs
+
+
+import re
+
+
+def extract_and_strip_ip_block(raw: str):
+    from core.operations.onu.parsers.ip_status import parse_ip_status
+
+    ip_service = parse_ip_status(raw)
+
+    raw_clean = raw
+
+    raw_clean = re.sub(
+        r"show ip-service user status gpon-onu_.*?(?=show |\Z)",
+        "",
+        raw_clean,
+        flags=re.S,
+    )
+
+    raw_clean = re.sub(
+        r"show ip dhcp snooping dynamic port pon gpon-onu_.*?(?=show |\Z)",
+        "",
+        raw_clean,
+        flags=re.S,
+    )
+
+    return ip_service, raw_clean
 
 
 class ZteZxanOltAdapter:
@@ -58,7 +84,7 @@ class ZteZxanOltAdapter:
                 return None
 
             # =========================================================
-            # 2. COLLECT ALL DATA (ONE SESSION, ONE REQUEST)
+            # 2. COLLECT ALL DATA (ONE SESSION)
             # =========================================================
             raw_all = await send_bulk(
                 reader,
@@ -72,22 +98,21 @@ class ZteZxanOltAdapter:
                     SHOW_INTERFACE.format(iface=iface),
                     SHOW_DETAIL_LOGS.format(iface=iface),
                 ],
-                timeout=2,
+                timeout=2.5,
             )
 
             # =========================================================
-            # 3. PARSING (ВСЁ ИЗ raw_all)
+            # 3. SAFE PARSING
             # =========================================================
-            remote_id = parse_remote_id(raw_all)
+            ip_service, raw_clean = extract_and_strip_ip_block(raw_all)
 
-            ip_service = (
-                parse_ip_status(raw_all)
-                or {"ip": "-", "mac": "-", "vlan": "-"}
-            )
+            ip_service = ip_service or {"ip": "-", "mac": "-", "vlan": "-"}
 
-            pon_power = parse_pon_power(raw_all)
-            remote_onu = parse_remote_onu_interface(raw_all)
-            iface_speed = parse_interface_speed(raw_all)
+            remote_id = parse_remote_id(raw_clean)
+            pon_power = parse_pon_power(raw_clean)
+            remote_onu = parse_remote_onu_interface(raw_clean)
+            iface_speed = parse_interface_speed(raw_clean)
+            detail_logs = parse_onu_detail_logs(raw_clean)
 
             # =========================================================
             # 4. RESULT
@@ -101,7 +126,7 @@ class ZteZxanOltAdapter:
                 "pon_power": pon_power,
                 "remote_onu": remote_onu,
                 "iface_speed": iface_speed,
-                "detail_logs": parse_onu_detail_logs(raw_all),
+                "detail_logs": detail_logs,
             }
 
         finally:

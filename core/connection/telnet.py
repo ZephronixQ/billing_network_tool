@@ -37,3 +37,4 @@ async def send_bulk(reader, writer, commands, timeout=2.0) -> str:
     except asyncio.TimeoutError:
         pass
     return output
+
