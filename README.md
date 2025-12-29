@@ -62,36 +62,47 @@
 ```text
 billing_network_tool/
 │
-├── main.py                     # CLI entrypoint
+├── main.py
 │
 ├── cli/
-│   ├── args.py                 # argparse
-│   ├── commands.py             # CLI routing
-│   └── help.py                 # CLI help
+│   ├── args.py
+│   └── help.py
 │
 ├── core/
 │   ├── connection/
-│   │   └── telnet.py           # connect(), send_bulk()
+│   │   └── telnet.py
 │   │
 │   └── operations/
+│       ├── uncfg.py
+│       ├── search.py
+│       ├── ipoe/
 │       └── onu/
-│           ├── adapter.py      # ZteZxanOltAdapter
+│           ├── adapter 
+│           │   └── zte_zxan_olt.py
 │           ├── commands/
-│           │   └── zte_zxan.py # SHOW_* commands
-│           └── parsers/
+│           │   └── zte_zxan.py
+│           ├── parsers/
+│           │   ├── common.py
+│           │   ├── uncfg.py
+│           │   ├── search.py
+│           │   ├── ip_status.py
+│           │   ├── pon_power.py
+│           │   ├── speed.py
+│           │   └── detail_logs.py
+│           └── tables/
+│               ├── uncfg.py
 │               ├── search.py
 │               ├── ip_status.py
 │               ├── pon_power.py
-│               ├── speed.py
+│               ├── oper_speed.py
 │               └── detail_logs.py
 │
 ├── config/
-│   ├── devices.yaml
 │   └── secrets.py
 │
 ├── output/
 │   ├── colors.py
-│   └── tables.py
+│   └── table_base.py
 │
 └── requirements.txt
 ```
@@ -101,7 +112,7 @@ billing_network_tool/
 ## Пример использования
 
 ```bash
-python3 main.py --sn HWTCAF67713E
+python3 main.py --sn XCTFAF21084E
 ```
 
 ---
