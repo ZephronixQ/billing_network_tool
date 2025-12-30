@@ -9,7 +9,7 @@ Usage:
 
 Options:
   {GREEN}--uncfg{RESET}        Show unregistered ONU on all OLTs
-  {GREEN}--sn <SERIAL>{RESET}  Search ONU by serial number
+  {GREEN}--gpon <SERIAL>{RESET}  Search ONU by serial number
   {GREEN}--help{RESET}         Show this help message
 
 Examples:

@@ -1,4 +1,5 @@
 import asyncio
+import re
 
 from core.connection.telnet import connect, send_bulk
 
@@ -11,6 +12,7 @@ from core.operations.onu.commands.zte_zxan import (
     SHOW_STATUS,
     SHOW_INTERFACE,
     SHOW_DETAIL_LOGS,
+    SHOW_UNCFG,
 )
 
 from core.operations.onu.parsers.search import (
@@ -23,9 +25,7 @@ from core.operations.onu.parsers.speed import (
     parse_interface_speed,
 )
 from core.operations.onu.parsers.detail_logs import parse_onu_detail_logs
-
-
-import re
+from core.operations.onu.parsers.uncfg import parse_uncfg
 
 
 def extract_and_strip_ip_block(raw: str):
@@ -128,6 +128,38 @@ class ZteZxanOltAdapter:
                 "iface_speed": iface_speed,
                 "detail_logs": detail_logs,
             }
+
+        finally:
+            writer.close()
+            await writer.wait_closed()
+
+    async def fetch_uncfg(self, host: str):
+        reader, writer = await connect(host)
+
+        try:
+            # =========================================================
+            # FLUSH CLI
+            # =========================================================
+            try:
+                while True:
+                    await asyncio.wait_for(reader.read(4096), 0.3)
+            except asyncio.TimeoutError:
+                pass
+
+            # =========================================================
+            # GET UNCFG ONU
+            # =========================================================
+            raw = await send_bulk(
+                reader,
+                writer,
+                [
+                    "terminal length 0",
+                    SHOW_UNCFG,
+                ],
+                timeout=3.0,
+            )
+
+            return parse_uncfg(raw) or []
 
         finally:
             writer.close()

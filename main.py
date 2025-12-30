@@ -6,6 +6,7 @@ from cli.help import print_help
 
 from core.operations.onu.uncfg import run_uncfg
 from core.operations.onu.search import run_sn_search
+from core.operations.ipoe.service import run_ipoe
 
 
 # ─────────────────────────────────────────────
@@ -36,6 +37,16 @@ async def main():
     if args.uncfg:
         await run_uncfg()
         return
+
+    # ───── IPOE ─────
+    if args.ipoe:
+        ip, port = args.ipoe
+        await run_ipoe(
+            host=ip,
+            port=port,
+        )
+        return
+
 
     print_help()
 

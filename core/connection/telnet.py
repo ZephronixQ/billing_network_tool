@@ -38,3 +38,24 @@ async def send_bulk(reader, writer, commands, timeout=2.0) -> str:
         pass
     return output
 
+async def send(reader, writer, cmd: str, timeout=5.0) -> str:
+    writer.write(cmd + "\n")
+    await writer.drain()
+
+    buf = ""
+
+    while True:
+        try:
+            chunk = await asyncio.wait_for(reader.read(4096), timeout)
+        except asyncio.TimeoutError:
+            break
+
+        if not chunk:
+            break
+
+        buf += chunk
+
+        if buf.strip().endswith(">"):
+            break
+
+    return buf
