@@ -17,16 +17,42 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--sn",
+        "--gpon",
         metavar="SERIAL",
-        help="Search ONU by serial number"
+        help="Search ONU by GPON serial number"
     )
 
     parser.add_argument(
         "--ipoe",
         nargs=2,
         metavar=("IP", "PORT"),
-        help="Run IPOE diagnostics: --ipoe <IP> <PORT>"
+        help="Run IPOE diagnostics or control port"
+    )
+
+    # ───── IPOE CONTROL FLAGS ─────
+    parser.add_argument(
+        "--disable",
+        action="store_true",
+        help="Disable IPOE port"
+    )
+
+    parser.add_argument(
+        "--enable",
+        action="store_true",
+        help="Enable IPOE port"
+    )
+
+    parser.add_argument(
+        "--restart",
+        action="store_true",
+        help="Restart IPOE port"
+    )
+
+    parser.add_argument(
+        "--speed",
+        type=int,
+        choices=[10, 100],
+        help="Set IPOE port speed (10 or 100)"
     )
 
     return parser.parse_args()
