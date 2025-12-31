@@ -1,19 +1,9 @@
-import asyncio
+import re
 
-async def send_command(reader, writer, command: str, timeout=1.5) -> str:
-    writer.write(command + "\n")
-    await writer.drain()
-    await asyncio.sleep(0.3)
+def extract(pattern, text, default="N/A"):
+    m = re.search(pattern, text, re.I | re.S)
+    return m.group(1).strip() if m else default
 
-    output = ""
 
-    while True:
-        try:
-            chunk = await asyncio.wait_for(reader.read(4096), timeout)
-            if not chunk:
-                break
-            output += chunk
-        except asyncio.TimeoutError:
-            break
-
-    return output
+def mac_to_plain(mac: str) -> str:
+    return re.sub(r'[^0-9a-f]', '', mac.lower())

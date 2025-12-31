@@ -1,24 +1,33 @@
-from .detect_vendor import detect_vendor
-from .adapter.factory import get_adapter
-from core.operations.ipoe.adapter.ZTE.tables import (
-    print_device_info,
-    print_port_info,
-)
+from core.connection.telnet import connect, TelnetConnectionError
+from core.operations.ipoe.detect_vendor import detect_vendor
+from core.operations.ipoe.adapter.factory import get_adapter
+from core.operations.ipoe.render.renderer_factory import get_renderer
 
 
 async def run_ipoe(host: str, port: str):
-    vendor = await detect_vendor(host)
+    try:
+        reader, writer = await connect(host)
 
-    adapter = get_adapter(
-        vendor=vendor,
-        host=host,
-        port=port,
-    )
-
-    result = await adapter.run()
-    if not result:
+    except TelnetConnectionError as e:
+        print()
+        print("❌ CONNECTION ERROR")
+        print(str(e))
         return
 
-    # ✅ ВОТ ЧЕГО НЕ ХВАТАЛО
-    print_device_info(result["device"])
-    print_port_info(port, result["port"])
+    try:
+        vendor = await detect_vendor(reader, writer)
+
+        if vendor is None:
+            print()
+            print("⚠ UNKNOWN DEVICE")
+            print("Vendor is not supported or cannot be detected")
+            return
+
+        adapter = get_adapter(vendor, reader, writer)
+        renderer = get_renderer(vendor)
+
+        data = await adapter.collect(port)
+        renderer.render(data, port)
+
+    finally:
+        writer.close()

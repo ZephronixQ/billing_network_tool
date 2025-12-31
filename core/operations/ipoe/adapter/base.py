@@ -2,25 +2,19 @@ from abc import ABC, abstractmethod
 
 
 class BaseIPoEAdapter(ABC):
+    """
+    Базовый контракт для IPOE адаптеров
+    """
 
-    def __init__(self, host: str, port: str):
-        self.host = host
-        self.port = port
+    vendor: str
+
+    def __init__(self, reader, writer):
+        self.reader = reader
+        self.writer = writer
 
     @abstractmethod
-    async def run(self) -> dict:
+    async def collect(self, port: str) -> dict:
         """
-        Возвращает:
-        {
-            vendor: str,
-            model: str,
-            ports: int,
-            speed: str,
-            port: {
-                state: str,
-                speed: str,
-                uptime: str
-            }
-        }
+        Возвращает нормализованные данные IPOE
         """
         ...

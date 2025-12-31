@@ -5,11 +5,10 @@ import re
 
 # ================== INPUT ==================
 def get_credentials():
-    host = '172.31.6.41'
+    host = '172.31.6.34'
     password = 'asdzx1390'
-    port = '11'
+    port = '21'
     return host, password, port
-
 
 # ================== TELNET ==================
 async def telnet_connect(host, password, port=23):

@@ -1,24 +1,21 @@
-# core/operations/ipoe/adapter/factory.py
-
-from core.operations.ipoe.common.exceptions import UnsupportedVendor
-
-# from core.operations.ipoe.adapter.snr.adapter import SNRIPOEAdapter
 from core.operations.ipoe.adapter.ZTE.adapter import ZTEIPoeAdapter
-# from core.operations.ipoe.adapter.dlink.adapter import DLinkIPOEAdapter
-# from core.operations.ipoe.adapter.eltex.adapter import EltexIPOEAdapter
-
-# VENDOR_ADAPTERS = {
-#     "ZTE": ZTEIPoEAdapter,
-#     # "SNR": SNRIPOEAdapter,
-#     # "ELTEX": EltexIPOEAdapter,
-#     # "D-LINK": DLinkIPOEAdapter,
-# }
+# from core.operations.ipoe.adapter.SNR.adapter import SNRIPoeAdapter
+# from core.operations.ipoe.adapter.ELTEX.adapter import EltexIPoeAdapter
+# from core.operations.ipoe.adapter.DLINK.adapter import DLinkIPoeAdapter
 
 
-def get_adapter(vendor: str, host: str, port: str):
+VENDOR_ADAPTERS = {
+    "ZTE": ZTEIPoeAdapter,
+    # "SNR": SNRIPoeAdapter,
+    # "ELTEX": EltexIPoeAdapter,
+    # "D-LINK": DLinkIPoeAdapter,
+}
+
+
+def get_adapter(vendor: str, reader, writer):
     vendor = vendor.upper()
 
-    if vendor == "ZTE":
-        return ZTEIPoeAdapter(host, port)
+    if vendor not in VENDOR_ADAPTERS:
+        raise ValueError(f"Unsupported IPOE vendor: {vendor}")
 
-    raise ValueError(f"Unsupported IPOE vendor: {vendor}")
+    return VENDOR_ADAPTERS[vendor](reader, writer)
