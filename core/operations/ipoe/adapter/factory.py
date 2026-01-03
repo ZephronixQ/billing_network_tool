@@ -1,12 +1,12 @@
 from core.operations.ipoe.adapter.ZTE.adapter import ZTEIPoeAdapter
-# from core.operations.ipoe.adapter.SNR.adapter import SNRIPoeAdapter
+from core.operations.ipoe.adapter.SNR.adapter import SNRIPoeAdapter
 # from core.operations.ipoe.adapter.ELTEX.adapter import EltexIPoeAdapter
 # from core.operations.ipoe.adapter.DLINK.adapter import DLinkIPoeAdapter
 
 
 VENDOR_ADAPTERS = {
     "ZTE": ZTEIPoeAdapter,
-    # "SNR": SNRIPoeAdapter,
+    "SNR": SNRIPoeAdapter,
     # "ELTEX": EltexIPoeAdapter,
     # "D-LINK": DLinkIPoeAdapter,
 }

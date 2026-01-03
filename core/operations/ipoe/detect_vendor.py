@@ -12,7 +12,7 @@ async def detect_vendor(reader, writer) -> str:
     if "zte corporation" in text or "zxr10" in text:
         return "ZTE"
 
-    # if "snr" in text or "foxgate" in text:
-    #     return "SNR"
+    if "snr-" in text or "nag llc" in text:
+        return "SNR"
 
     return "UNKNOWN"
