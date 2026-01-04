@@ -4,6 +4,7 @@ import asyncio
 import re
 import telnetlib3
 import socket
+import time
 
 from config.secrets import TELNET_USERNAME, TELNET_PASSWORD, TELNET_PORT
 
@@ -12,7 +13,7 @@ from config.secrets import TELNET_USERNAME, TELNET_PASSWORD, TELNET_PORT
 # PROMPTS
 # =========================
 
-DEFAULT_PROMPT_RE = re.compile(r"\)#|\(cfg\)#|>$")
+DEFAULT_PROMPT_RE = re.compile(r"\)#|\(cfg\)#|>\s*$")
 SNR_PROMPT_RE = re.compile(r"#\s*$")
 
 
@@ -30,71 +31,74 @@ async def connect(host: str):
             telnetlib3.open_connection(
                 host=host,
                 port=TELNET_PORT,
-                connect_minwait=0.5,
-                connect_maxwait=3.0,
+                connect_minwait=0.2,
+                connect_maxwait=1.5,
             ),
-            timeout=5,
+            timeout=3,
         )
 
         writer.write(TELNET_USERNAME + "\n")
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.1)
 
         writer.write(TELNET_PASSWORD + "\n")
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.2)
 
         return reader, writer
 
     except asyncio.TimeoutError:
-        raise TelnetConnectionError(
-            f"Connection timeout to host {host}"
-        )
+        raise TelnetConnectionError(f"Connection timeout to host {host}")
     except socket.gaierror:
-        raise TelnetConnectionError(
-            f"Host {host} does not exist or DNS resolution failed"
-        )
+        raise TelnetConnectionError(f"Host {host} does not exist or DNS failed")
     except ConnectionRefusedError:
-        raise TelnetConnectionError(
-            f"Connection refused by host {host}"
-        )
+        raise TelnetConnectionError(f"Connection refused by host {host}")
     except OSError as e:
-        raise TelnetConnectionError(
-            f"Network error while connecting to {host}: {e}"
-        )
+        raise TelnetConnectionError(f"Network error while connecting to {host}: {e}")
 
 
 # =========================
-# LOW LEVEL READ
+# LOW LEVEL READ (FIXED)
 # =========================
 
 async def read_until_prompt(
     reader,
     writer,
+    *,
     prompt_re,
-    timeout: float = 0.5,
+    timeout: float = 1.5,
     handle_paging: bool = False,
+    chunk_size: int = 4096,
 ) -> str:
-    output = ""
+    """
+    Быстрое и безопасное чтение CLI до prompt.
+    """
 
-    try:
-        while True:
-            chunk = await asyncio.wait_for(reader.read(4096), timeout)
-            if not chunk:
-                break
+    buf = ""
+    deadline = time.monotonic() + timeout
 
-            output += chunk
+    while time.monotonic() < deadline:
+        try:
+            chunk = await asyncio.wait_for(
+                reader.read(chunk_size),
+                timeout=0.3,
+            )
+        except asyncio.TimeoutError:
+            break
 
-            if handle_paging and ("--More--" in chunk or "more" in chunk.lower()):
-                writer.write(" ")
-                await asyncio.sleep(0.05)
-                continue
+        if not chunk:
+            break
 
-            if prompt_re.search(chunk):
-                break
+        buf += chunk
 
-    except asyncio.TimeoutError:
-        pass
+        # ===== pager =====
+        if handle_paging and ("--More--" in chunk or "more" in chunk.lower()):
+            writer.write(" ")
+            continue
 
-    return output
+        # ===== prompt =====
+        if prompt_re.search(buf):
+            break
+
+    return buf
 
 
 # =========================
@@ -106,23 +110,23 @@ async def send_bulk(reader, writer, commands, timeout: float = 2.0) -> str:
     payload = "\n".join(commands + [f"echo {marker}"]) + "\n"
 
     writer.write(payload)
-    output = ""
+    buf = ""
+    deadline = time.monotonic() + timeout
 
-    try:
-        while True:
-            chunk = await asyncio.wait_for(reader.read(4096), timeout)
-            if not chunk:
-                break
+    while time.monotonic() < deadline:
+        try:
+            chunk = await asyncio.wait_for(reader.read(4096), timeout=0.5)
+        except asyncio.TimeoutError:
+            break
 
-            output += chunk
+        if not chunk:
+            break
 
-            if marker in chunk:
-                break
+        buf += chunk
+        if marker in buf:
+            break
 
-    except asyncio.TimeoutError:
-        pass
-
-    return output
+    return buf
 
 
 # =========================
@@ -149,6 +153,7 @@ async def send_ipoe(
             prompt_re=prompt_re,
             handle_paging=handle_paging,
         )
+
         output += chunk
 
     return output

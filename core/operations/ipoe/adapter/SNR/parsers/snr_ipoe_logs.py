@@ -1,100 +1,128 @@
-import asyncio
+# core/operations/ipoe/adapter/SNR/logs.py
+
 import re
 
-from core.connection.telnet import send_ipoe, SNR_PROMPT_RE
+from core.connection.telnet import read_until_prompt, SNR_PROMPT_RE
 from core.operations.ipoe.adapter.SNR.commands import (
     SHOW_LOGGING_FLASH,
     SHOW_LOGGING_INCLUDE,
 )
 
 
-# =========================
-# FAST (show logging flash)
-# =========================
-async def snr_collect_logs_fast(
+async def snr_collect_logs(
     reader,
     writer,
     port: str,
-    limit: int = 15,
+    model: str,
+    limit: int = 10,
 ) -> list[str]:
+    iface = f"Ethernet{port}"
     logs: list[str] = []
-    port_re = re.escape(port)
 
-    pattern = re.compile(
-        rf"(\d+)\s+(%[A-Za-z]+\s+\d+\s+\d+:\d+:\d+).*?"
-        rf"Ethernet{port_re}.*?(UP|DOWN)",
-        re.I,
-    )
-
-    writer.write(SHOW_LOGGING_FLASH + "\n")
-
-    buffer = ""
-    while True:
-        chunk = await reader.read(2048)
-        if not chunk:
-            break
-
-        buffer += chunk
-
-        for line in buffer.splitlines():
-            m = pattern.search(line)
-            if not m:
-                continue
-
-            logs.append(
-                f"{m.group(1)} {m.group(2)} - {m.group(3).upper()}"
-            )
-
-            if len(logs) >= limit:
-                return logs
-
-        if "--More--" in chunk or "more" in chunk.lower():
-            writer.write(" ")
-            await asyncio.sleep(0.05)
-
-        buffer = buffer[-2048:]
-
-    return logs
-
-
-# =========================
-# INCLUDE (prompt-based)
-# =========================
-async def snr_collect_logs_include(
-    reader,
-    writer,
-    port: str,
-    limit: int = 15,
-) -> list[str]:
-    logs: list[str] = []
-    port_num = port.split("/")[-1]
-
-    iface_re = re.compile(rf"\bEthernet1/0/{port_num}\b", re.I)
-    pattern = re.compile(
-        r"(\d+)\s+(%[A-Za-z]+\s+\d+\s+\d+:\d+:\d+).*?(UP|DOWN)",
-        re.I,
-    )
-
-    raw = await send_ipoe(
+    # ==========================
+    # enable paging
+    # ==========================
+    writer.write("terminal length 24\n")
+    await read_until_prompt(
         reader,
         writer,
-        [SHOW_LOGGING_INCLUDE.format(port_num=port_num)],
         prompt_re=SNR_PROMPT_RE,
+        timeout=0.5,
     )
 
-    for line in raw.splitlines():
-        if not iface_re.search(line):
-            continue
+    # ==========================
+    # S2985G-48T — FLASH LOGGING
+    # ==========================
+    if model == "S2985G-48T":
+        writer.write(SHOW_LOGGING_FLASH + "\n")
 
-        m = pattern.search(line)
-        if not m:
-            continue
-
-        logs.append(
-            f"{m.group(1)} {m.group(2)} - {m.group(3).upper()}"
+        log_re = re.compile(
+            rf"""
+            ^(?P<id>\d+)\s+
+            (?P<time>%[A-Za-z]+\s+\d+\s+\d+:\d+:\d+).*?
+            Line\s+protocol\s+on\s+Interface\s+{re.escape(iface)},\s+
+            changed\s+state\s+to\s+(?P<event>UP|DOWN)
+            """,
+            re.IGNORECASE | re.MULTILINE | re.VERBOSE,
         )
 
-        if len(logs) >= limit:
-            break
+        buf = ""
+        max_lines = 200
+
+        while True:
+            chunk = await reader.read(16384)
+            if not chunk:
+                break
+
+            if "--More--" in chunk:
+                writer.write(" ")
+                chunk = chunk.replace("--More--", "")
+
+            buf += chunk
+
+            # основной ограничитель
+            if buf.count("\n") >= max_lines:
+                break
+
+            # вторичный — на случай короткого вывода
+            if chunk.rstrip().endswith("#"):
+                break
+
+        for m in log_re.finditer(buf):
+            logs.append(
+                f"{m.group('id')} "
+                f"{m.group('time').lstrip('%')} "
+                f"{iface} "
+                f"{m.group('event').upper()}"
+            )
+            if len(logs) >= limit:
+                break
+
+    # ==========================
+    # ALL OTHER MODELS — INCLUDE
+    # ==========================
+    else:
+        port_num = port.split("/")[-1]
+        writer.write(
+            SHOW_LOGGING_INCLUDE.format(port_num=port_num) + "\n"
+        )
+
+        buf = await read_until_prompt(
+            reader,
+            writer,
+            prompt_re=SNR_PROMPT_RE,
+            timeout=1.0,
+        )
+
+        include_re = re.compile(
+            rf"""
+            ^(?P<id>\d+)\s+
+            (?P<time>%[A-Za-z]+\s+\d+\s+\d+:\d+:\d+).*?
+            {re.escape(iface)}.*?
+            (?P<event>UP|DOWN)
+            """,
+            re.IGNORECASE | re.MULTILINE | re.VERBOSE,
+        )
+
+        for m in include_re.finditer(buf):
+            logs.append(
+                f"{m.group('id')} "
+                f"{m.group('time').lstrip('%')} "
+                f"{iface} "
+                f"{m.group('event').upper()}"
+            )
+            if len(logs) >= limit:
+                break
+
+    # ==========================
+    # restore terminal
+    # ==========================
+    writer.write("terminal length 0\n")
+    await read_until_prompt(
+        reader,
+        writer,
+        prompt_re=SNR_PROMPT_RE,
+        timeout=0.5,
+    )
 
     return logs

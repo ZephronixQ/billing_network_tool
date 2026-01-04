@@ -1,6 +1,6 @@
 # core/operations/ipoe/adapter/SNR/tables/snr_logs.py
 
-from output.colors import BLUE, CYAN, YELLOW, RESET
+from output.colors import BLUE, CYAN, GREEN, RED, RESET
 from output.table_base import render_table
 
 
@@ -9,7 +9,7 @@ def _c(val: str, color: str) -> str:
 
 
 def print_logs(logs: list[str]):
-    title = f"\n{CYAN}📜 DEVICE LOGS{RESET}"
+    title = f"\n{CYAN}📜 DEVICE LOGS (MAX LINES = 200){RESET}"
 
     if not logs:
         render_table(
@@ -23,34 +23,54 @@ def print_logs(logs: list[str]):
     seen_ids: set[str] = set()
 
     for line in logs:
-        # ожидаемый формат:
-        # "618 %Jan 01 00:00:26 - DOWN"
         try:
-            left, event = line.split("-", 1)
-            event = event.strip()
+            parts = line.split()
 
-            parts = left.strip().split(maxsplit=1)
-            log_id = parts[0]
-            time = parts[1].lstrip("%")
+            # ===== NEW FORMAT =====
+            if len(parts) >= 5:
+                log_id = parts[0]
+                time = " ".join(parts[1:4])
+                iface = parts[4]
+                event = parts[5] if len(parts) > 5 else parts[-1]
+
+            # ===== OLD FORMAT 2 =====
+            elif "-" in line and line.count("-") == 2:
+                log_id, iface, event = [p.strip() for p in line.split("-")]
+                time = ""
+
+            # ===== OLD FORMAT 1 =====
+            elif "-" in line:
+                left, event = [p.strip() for p in line.split("-", 1)]
+                left_parts = left.split(maxsplit=1)
+                log_id = left_parts[0]
+                time = left_parts[1].lstrip("%") if len(left_parts) > 1 else ""
+                iface = ""
+
+            else:
+                continue
+
+            event = event.upper()
 
         except Exception:
             continue
 
-        # 🔑 дедупликация строго по ID
         if log_id in seen_ids:
             continue
-
         seen_ids.add(log_id)
+
+        event_color = GREEN if event == "UP" else RED
 
         rows.append([
             _c(log_id, CYAN),
-            time,
-            _c(event, YELLOW if event == "UP" else RESET),
+            _c(time, BLUE) if time else "",
+            _c(iface, CYAN) if iface else "",
+            _c(event, event_color),
         ])
 
     headers = [
         f"{BLUE}ID{RESET}",
         f"{BLUE}TIME{RESET}",
+        f"{BLUE}IFACE{RESET}",
         f"{BLUE}EVENT{RESET}",
     ]
 
