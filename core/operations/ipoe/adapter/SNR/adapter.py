@@ -16,12 +16,14 @@ from core.connection.telnet import (
     SNR_PROMPT_RE,
 )
 
+
 class SNRIPoeAdapter(BaseIPoEAdapter):
     vendor = "SNR"
 
     async def collect(self, port: str) -> dict:
         port = normalize_port(port)
 
+        # ===== CLI SETUP =====
         await send_ipoe(
             self.reader,
             self.writer,
@@ -29,6 +31,7 @@ class SNRIPoeAdapter(BaseIPoEAdapter):
             prompt_re=SNR_PROMPT_RE,
         )
 
+        # ===== DEVICE =====
         raw_version = await send_ipoe(
             self.reader,
             self.writer,
@@ -48,7 +51,9 @@ class SNRIPoeAdapter(BaseIPoEAdapter):
             "model": model,
         }
 
+        # ===== EXEC QUERY PLAN =====
         for step in build_query_plan(port, model):
+
             # обычные команды
             if step["commands"]:
                 raw = await send_ipoe(
@@ -59,8 +64,9 @@ class SNRIPoeAdapter(BaseIPoEAdapter):
                     handle_paging=step.get("paging", False),
                 )
                 result[step["key"]] = step["parser"](raw)
+
+            # специальные сборщики (logs и т.п.)
             else:
-                # специальные сборщики (logs и т.п.)
                 result[step["key"]] = await step["parser"](
                     self.reader,
                     self.writer,

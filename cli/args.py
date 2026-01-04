@@ -48,11 +48,24 @@ def parse_args():
         help="Restart IPOE port"
     )
 
+    # parser.add_argument(
+    #     "--speed",
+    #     type=int,
+    #     choices=[10, 100],
+    #     help="Set IPOE port speed (10 or 100)"
+    # )
+
     parser.add_argument(
         "--speed",
-        type=int,
-        choices=[10, 100],
-        help="Set IPOE port speed (10 or 100)"
+        metavar="MODE",
+        help=(
+            "Set IPOE port speed\n"
+            "ZTE: 10 | 100\n"
+            "SNR: auto, force10-full, force10-half, "
+            "force100-full, force100-fx, force100-half, "
+            "force1g-full, force1g-half, force10g-full"
+        )
     )
+
 
     return parser.parse_args()

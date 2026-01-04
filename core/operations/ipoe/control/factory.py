@@ -1,8 +1,10 @@
 from core.operations.ipoe.control.vendors.ZTE.conf_speed_and_port import ZTEPortController
+from core.operations.ipoe.control.vendors.SNR.conf_speed_and_port import SNRPortController
 
 
 VENDOR_CONTROLLERS = {
     "ZTE": ZTEPortController,
+    "SNR": SNRPortController,
 }
 
 

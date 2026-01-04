@@ -21,5 +21,5 @@ class BaseIPoEController(ABC):
         ...
 
     @abstractmethod
-    async def set_port_speed(self, port: str, speed: int):
+    async def set_port_speed(self, port: str, speed: str):
         ...

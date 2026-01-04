@@ -1,12 +1,16 @@
 import asyncio
 import re
 
+from core.connection.telnet import send_ipoe, SNR_PROMPT_RE
 from core.operations.ipoe.adapter.SNR.commands import (
     SHOW_LOGGING_FLASH,
     SHOW_LOGGING_INCLUDE,
 )
 
 
+# =========================
+# FAST (show logging flash)
+# =========================
 async def snr_collect_logs_fast(
     reader,
     writer,
@@ -34,12 +38,15 @@ async def snr_collect_logs_fast(
 
         for line in buffer.splitlines():
             m = pattern.search(line)
-            if m:
-                logs.append(
-                    f"{m.group(1)} {m.group(2)} - {m.group(3).upper()}"
-                )
-                if len(logs) >= limit:
-                    return logs
+            if not m:
+                continue
+
+            logs.append(
+                f"{m.group(1)} {m.group(2)} - {m.group(3).upper()}"
+            )
+
+            if len(logs) >= limit:
+                return logs
 
         if "--More--" in chunk or "more" in chunk.lower():
             writer.write(" ")
@@ -50,6 +57,9 @@ async def snr_collect_logs_fast(
     return logs
 
 
+# =========================
+# INCLUDE (prompt-based)
+# =========================
 async def snr_collect_logs_include(
     reader,
     writer,
@@ -65,27 +75,26 @@ async def snr_collect_logs_include(
         re.I,
     )
 
-    writer.write(
-        SHOW_LOGGING_INCLUDE.format(port_num=port_num) + "\n"
+    raw = await send_ipoe(
+        reader,
+        writer,
+        [SHOW_LOGGING_INCLUDE.format(port_num=port_num)],
+        prompt_re=SNR_PROMPT_RE,
     )
-
-    raw = ""
-    while True:
-        chunk = await reader.read(2048)
-        if not chunk:
-            break
-        raw += chunk
 
     for line in raw.splitlines():
         if not iface_re.search(line):
             continue
 
         m = pattern.search(line)
-        if m:
-            logs.append(
-                f"{m.group(1)} {m.group(2)} - {m.group(3).upper()}"
-            )
-            if len(logs) >= limit:
-                break
+        if not m:
+            continue
+
+        logs.append(
+            f"{m.group(1)} {m.group(2)} - {m.group(3).upper()}"
+        )
+
+        if len(logs) >= limit:
+            break
 
     return logs

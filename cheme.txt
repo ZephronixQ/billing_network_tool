@@ -33,16 +33,16 @@ billing_network_tool/
 │       │
 │       ├── ipoe/
 │       │   ├── __init__.py
-│       │
+│       │   │
 │       │   ├── service.py
 │       │   │   # run_ipoe()
 │       │   │   # connect → detect_vendor → adapter → renderer
-│       │
+│       │   │
 │       │   ├── detect_vendor.py
 │       │   │   # detect_vendor(reader, writer)
 │       │   │   # show version / show system
 │       │   │   # UNKNOWN vendor handling
-│       │
+│       │   |
 │       │   ├── adapter/
 │       │   │   ├── __init__.py
 │       │   │   ├── base.py
@@ -51,6 +51,64 @@ billing_network_tool/
 │       │   │   ├── factory.py
 │       │   │   │   # get_adapter(vendor, reader, writer)
 │       │   │   │
+│       │   │   ├── SNR/
+│       │   │   │   ├── __init__.py
+│       │   │   │   │
+│       │   │   │   ├── adapter.py
+│       │   │   │   │   # SNRIPoEAdapter
+│       │   │   │   │   # collect()
+│       │   │   │   │
+│       │   │   │   ├── commands.py
+│       │   │   │   │   # DISABLE_PAGING
+│       │   │   │   │   # SHOW_VERSION
+│       │   │   │   │   # SHOW_INTERFACE
+│       │   │   │   │   # SHOW_MAC_TABLE
+│       │   │   │   │   # SHOW_LOGGING_FLASH
+│       │   │   │   │   # SHOW_LOGGING_INCLUDE
+│       │   │   │   │
+│       │   │   │   ├── query.py
+│       │   │   │   │   # build_query_plan(port)
+│       │   │   │   │   # key + commands + parser
+│       │   │   │   │
+│       │   │   │   ├── constants.py
+│       │   │   │   │   # all constants SNR (model, ports, promt, format_ports)
+│       │   │   │   │
+│       │   │   │   ├── parsers/
+│       │   │   │   │   ├── __init__.py
+│       │   │   │   │   │
+│       │   │   │   │   ├── snr_ipoe_interface.py
+│       │   │   │   │   │   # snr_ipoe_interface()
+│       │   │   │   │   │
+│       │   │   │   │   ├── snr_ipoe_logs.py
+│       │   │   │   │   │   # snr_collect_logs_fast()
+│       │   │   │   │   │   # snr_collect_logs_include()
+│       │   │   │   │   │
+│       │   │   │   │   └── snr_ipoe_mac.py
+│       │   │   │   │       # snr_ipoe_mac()
+│       │   │   │   │
+│       │   │   │   └── tables/
+│       │   │   │       ├── __init__.py
+│       │   │   │       │
+│       │   │   │       ├── snr_device.py
+│       │   │   │       │   # print_device_info()
+│       │   │   │       │
+│       │   │   │       ├── snr_errors.py
+│       │   │   │       │   # print_port_errors()
+│       │   │   │       │
+│       │   │   │       ├── zte_mac.py
+│       │   │   │       │   # print_mac()
+│       │   │   │       │
+│       │   │   │       ├── zte_traffic.py
+│       │   │   │       │   # print_port_traffic()
+│       │   │   │       │
+│       │   │   │       ├── zte_port.py
+│       │   │   │       │   # print_port_status()
+│       │   │   │       │
+│       │   │   │       ├── zte_mac_peport.py
+│       │   │   │       │   # print_port_report()
+│       │   │   │       │
+│       │   │   │       └── zte_logs.py
+│       │   │   │           # print_logs()
 │       │   │   └── ZTE/
 │       │   │       ├── __init__.py
 │       │   │       │
@@ -113,20 +171,49 @@ billing_network_tool/
 │       │   │           ├── zte_mac_protect.py
 │       │   │           │   # print_mac_protect()
 │       │   │           │
+│       │   │           ├── zte_mac_peport.py
+│       │   │           │   # print_port_report()
+│       │   │           │
 │       │   │           └── zte_logs.py
 │       │   │               # print_logs()
 │       │   │
-│       │   └── render/
-│       │       ├── __init__.py
-│       │       ├── renderer_base.py
-│       │       │   # BaseIPoERenderer
+│       │   ├── render/
+│       │   │   ├── utils.py
+│       │   │   │   # execute_cli_plan()
+│       │   │   │
+│       │   │   └── executor.py
+│       │   │       # text / regex / normalization helpers
+│       │   │   
+│       │   ├── render/
+│       │   │   ├── __init__.py
+│       │   │   ├── renderer_base.py
+│       │   │   │   # BaseIPoERenderer
+│       │   │   │
+│       │   │   ├── renderer_factory.py
+│       │   │   │   # get_renderer(vendor)
+│       │   │   │
+│       │   │   ├── zte.py
+│       │   │   │   # ZTERenderer
+│       │   │   │   # orchestrates ZTE tables
+│       │   │   └── zte.py
+│       │   │       # SNRRenderer
+│       │   │       # orchestrates SNR tables
+│       │   │
+│       |   └── control/
+│       │       ├── base.py
+│       │       │   # BaseIPoEController
 │       │       │
-│       │       ├── renderer_factory.py
-│       │       │   # get_renderer(vendor)
+│       │       ├── factory.py
+│       │       │   # get_controller(vendor, reader, writer)
 │       │       │
-│       │       └── zte.py
-│       │           # ZTERenderer
-│       │           # orchestrates ZTE tables
+│       │       └── vendors/
+│       │           ├── ZTE/
+│       │           │   └── conf_speed_and_port.py
+│       │           │       # ZTEPortController
+│       │           │
+│       │           └── SNR/
+│       │               └── conf_speed_and_port.py
+│       │                   # SNRPortController
 │       │
 │       └── onu/
 │           ├── __init__.py
