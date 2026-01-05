@@ -16,7 +16,6 @@ from core.connection.telnet import (
     SNR_PROMPT_RE,
 )
 
-
 class SNRIPoeAdapter(BaseIPoEAdapter):
     vendor = "SNR"
 

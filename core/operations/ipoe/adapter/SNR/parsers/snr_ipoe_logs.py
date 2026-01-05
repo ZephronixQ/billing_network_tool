@@ -31,9 +31,9 @@ async def snr_collect_logs(
     )
 
     # ==========================
-    # S2985G-48T — FLASH LOGGING
+    # S2985G-48T and S2990G-48T — FLASH LOGGING
     # ==========================
-    if model == "S2985G-48T":
+    if model in ("S2985G-48T", "S2990G-48T"):
         writer.write(SHOW_LOGGING_FLASH + "\n")
 
         log_re = re.compile(

@@ -1,6 +1,5 @@
 from core.operations.ipoe.adapter.SNR.tables.snr_report import print_port_report
 
-
 class SNRRenderer:
     def render(self, data: dict, port: str) -> None:
         if data.get("unsupported"):

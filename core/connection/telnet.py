@@ -1,5 +1,3 @@
-# core/connection/telnet.py
-
 import asyncio
 import re
 import telnetlib3
@@ -7,7 +5,6 @@ import socket
 import time
 
 from config.secrets import TELNET_USERNAME, TELNET_PASSWORD, TELNET_PORT
-
 
 # =========================
 # PROMPTS
@@ -155,5 +152,54 @@ async def send_ipoe(
         )
 
         output += chunk
+
+    return output
+
+
+
+ELTEX_PROMPT_RE = re.compile(r"\n?\S+#\s*$")
+
+
+async def send_ipoe_eltex(
+    reader,
+    writer,
+    commands,
+    *,
+    timeout: float = 3.0,
+) -> str:
+    output = ""
+
+    for cmd in commands:
+        writer.write(cmd + "\n")
+        await writer.drain()
+
+        buf = ""
+
+        while True:
+            try:
+                chunk = await asyncio.wait_for(
+                    reader.read(4096),
+                    timeout=timeout,
+                )
+            except asyncio.TimeoutError:
+                break
+
+            if not chunk:
+                break
+
+            chunk = chunk.replace("\r", "")
+            buf += chunk
+
+            # ===== paging =====
+            if "---- More ----" in chunk or "More:" in chunk:
+                writer.write(" ")
+                await writer.drain()
+                continue
+
+            # ===== prompt =====
+            if ELTEX_PROMPT_RE.search(buf):
+                break
+
+        output += buf
 
     return output

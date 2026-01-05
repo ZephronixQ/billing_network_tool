@@ -1,250 +1,289 @@
-import asyncio, telnetlib3, re
+import asyncio
+import telnetlib3
+import re
 
-# ================== INPUT ==================
+# ============================================================
+# INPUT
+# ============================================================
 def get_user_input():
-    host = input("IP устройства: ").strip()
-    password = input("Пароль: ").strip()
-    port = input("Интерфейс (например 1/0/3): ").strip()
+    host = "172.31.6.240"
+    password = "asdzx1390"
+    port = "13"  # порт из биллинга
     return host, password, port
 
-# ================== TELNET ==================
-async def send_command(reader, writer, command, read_timeout=1.5):
+
+# ============================================================
+# DEVICE CONSTANTS (FAST LOOKUP)
+# ============================================================
+DEVICE_MODEL_DB = {
+    "MES2348B":   {"vendor": "ELTEX", "ge": 48, "sfp": 4},
+    "MES1124MB":  {"vendor": "ELTEX", "fe": 24, "ge": 4},
+}
+
+MODEL_RE = re.compile(r"\b(MES\d+[A-Z]+)\b")
+
+
+# ============================================================
+# TELNET CORE
+# ============================================================
+PROMPT_RE = re.compile(r"\n?\S+#\s*$")
+
+
+async def read_until_prompt(reader, timeout=3.0):
+    buf = ""
+    while True:
+        try:
+            chunk = await asyncio.wait_for(reader.read(4096), timeout)
+            if not chunk:
+                break
+            buf += chunk
+            if PROMPT_RE.search(buf):
+                break
+        except asyncio.TimeoutError:
+            break
+    return buf
+
+
+async def send_command(reader, writer, command, timeout=3.0):
     writer.write(command + "\n")
-    await asyncio.sleep(0.3)
     output = ""
 
     while True:
         try:
-            chunk = await asyncio.wait_for(reader.read(1024), timeout=read_timeout)
+            chunk = await asyncio.wait_for(reader.read(4096), timeout)
             if not chunk:
                 break
+
             output += chunk
 
-            if "---- More ----" in chunk or "more" in chunk.lower():
+            if "---- More ----" in chunk or "More:" in chunk:
                 writer.write(" ")
-                await asyncio.sleep(0.2)
+                continue
+
+            if PROMPT_RE.search(output):
+                break
+
         except asyncio.TimeoutError:
             break
 
     return output
 
-async def eltex_telnet_collect(host, password):
+
+async def telnet_login(host, password):
     reader, writer = await telnetlib3.open_connection(host=host, port=23)
 
-    # Авторизация
-    for cred in ["admin", password]:
-        writer.write(cred + "\n")
-        await asyncio.sleep(0.5)
+    writer.write("admin\n")
+    await asyncio.sleep(0.2)
+    writer.write(password + "\n")
+    await asyncio.sleep(0.4)
 
-    commands = {
-        "version": "show version",
-        "system": "show system",
-        "switch": "show switch"
-    }
+    await read_until_prompt(reader)
 
-    out = {}
-    for key, cmd in commands.items():
-        out[key] = await send_command(reader, writer, cmd)
+    writer.write("terminal length 0\n")
+    await asyncio.sleep(0.2)
+    await read_until_prompt(reader)
 
-    writer.close()
-    return out
+    return reader, writer
 
-# ================== PARSERS ==================
-def parse_switch_info(output: str):
-    match = re.search(r"System Description:\s+(.+)", output)
-    if not match:
-        return None
 
-    desc = match.group(1).strip()
-    if "MES" not in desc:
-        return None
+# ============================================================
+# FAST DEVICE DETECT
+# ============================================================
+def fast_detect_device(output: str):
+    m = MODEL_RE.search(output)
+    if not m:
+        return {
+            "model": "UNKNOWN",
+            "vendor": "UNKNOWN",
+            "ports": "Unknown",
+            "speed": "Unknown",
+            "ports_detail": {},
+        }
 
-    model_match = re.search(r"(MES[0-9A-Za-z]+)", desc)
-    model = model_match.group(1) if model_match else "Unknown"
+    model = m.group(1)
+    info = DEVICE_MODEL_DB.get(model)
 
-    ports_match = re.search(r"(\d+)-port", desc)
-    ports = ports_match.group(1) if ports_match else "Unknown"
+    if not info:
+        return {
+            "model": model,
+            "vendor": "UNKNOWN",
+            "ports": "Unknown",
+            "speed": "Unknown",
+            "ports_detail": {},
+        }
 
-    speed_match = re.search(r"(\d+[MG]/\d+[MG])", desc)
-    speed = speed_match.group(1) if speed_match else "Unknown"
+    total_ports = sum(
+        v for k, v in info.items() if k in ("fe", "ge", "sfp")
+    )
+
+    speed = "1G/10G" if info.get("sfp") else "100M/1G"
 
     return {
         "model": model,
-        "ports": ports,
+        "vendor": info["vendor"],
+        "ports": total_ports,
         "speed": speed,
-        "description": desc
+        "ports_detail": info,
     }
 
-def find_mes_presence(outputs: dict):
-    for text in outputs.values():
-        if "MES" in text:
-            return True
-    return False
 
+# ============================================================
+# PARSERS
+# ============================================================
 def determine_interface_type(speed: str):
-    if speed in ("100M/1G", "100M/1G "):
-        return "FastEthernet"
-    elif speed in ("1G/10G", "1G/10G "):
+    if speed.startswith("1G"):
         return "GigabitEthernet"
-    else:
-        return "FastEthernet"
+    return "FastEthernet"
+
 
 def parse_interface(output: str):
     status_match = re.search(r"is (\w+) \(connected\)", output)
-    status = status_match.group(1) if status_match else "down"
+    status = status_match.group(1).lower() if status_match else "down"
 
-    if status.lower() != "up":
+    if status != "up":
         return {"status": "down"}
 
-    duplex_speed_match = re.search(r"Full-duplex, (\d+Mbps), .*media type is (\S+)", output)
-    link_speed = duplex_speed_match.group(1) if duplex_speed_match else "Unknown"
-    media_type = duplex_speed_match.group(2) if duplex_speed_match else "Unknown"
+    duplex_speed_match = re.search(
+        r"Full-duplex,\s+(\d+Mbps),.*media type is (\S+)", output
+    )
 
     input_match = re.search(r"15 second input rate is (\d+) Kbit/s", output)
     output_match = re.search(r"15 second output rate is (\d+) Kbit/s", output)
-    input_rate = input_match.group(1) if input_match else "0"
-    output_rate = output_match.group(1) if output_match else "0"
 
     input_errors_match = re.search(r"(\d+) input errors", output)
     output_errors_match = re.search(r"(\d+) output errors", output)
-    input_errors = input_errors_match.group(1) if input_errors_match else "0"
-    output_errors = output_errors_match.group(1) if output_errors_match else "0"
 
     return {
         "status": "up",
-        "link_speed": link_speed,
-        "media_type": media_type,
-        "input_rate": input_rate,
-        "output_rate": output_rate,
-        "input_errors": input_errors,
-        "output_errors": output_errors
+        "link_speed": duplex_speed_match.group(1) if duplex_speed_match else "Unknown",
+        "media_type": duplex_speed_match.group(2) if duplex_speed_match else "Unknown",
+        "input_rate": input_match.group(1) if input_match else "0",
+        "output_rate": output_match.group(1) if output_match else "0",
+        "input_errors": input_errors_match.group(1) if input_errors_match else "0",
+        "output_errors": output_errors_match.group(1) if output_errors_match else "0",
     }
 
+
 def parse_mac_table(output: str):
-    mac_entries = []
-    lines = output.splitlines()
-    for line in lines:
-        line = line.strip()
-        match = re.match(r"^(\d+)\s+([0-9a-f:]{17})\s+(\S+)\s+(\S+)", line, re.I)
+    entries = []
+    for line in output.splitlines():
+        match = re.match(
+            r"^(\d+)\s+([0-9a-f:]{17})\s+\S+\s+(\S+)",
+            line.strip(),
+            re.I,
+        )
         if match:
-            vlan, mac, port, type_ = match.groups()
-            mac_entries.append({
-                "vlan": vlan,
-                "mac": mac,
-                "port": port,
-                "type": type_
-            })
-    return mac_entries
+            vlan, mac, type_ = match.groups()
+            entries.append({"vlan": vlan, "mac": mac, "type": type_})
+    return entries
 
-async def get_port_logs(reader, writer, short_port, max_lines=15):
-    cmd = f"show logging | include {short_port}"
-    writer.write(cmd + "\n")
-    await asyncio.sleep(0.5)
 
-    output = ""
-    while True:
-        try:
-            chunk = await asyncio.wait_for(reader.read(1024), timeout=1.5)
-            if not chunk:
-                break
-            output += chunk
+def parse_logs(output: str, short_port: str, max_lines=15):
+    lines = []
+    port_re = re.compile(rf"\b{re.escape(short_port)}\b", re.I)
+    prompt_re = re.compile(r"^\S+#\s*$")
 
-            if "More:" in chunk or "---- More ----" in chunk:
-                writer.write(" ")
-                await asyncio.sleep(0.2)
-
-        except asyncio.TimeoutError:
+    for raw in output.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith("show logging"):
+            continue
+        if prompt_re.match(line):
+            continue
+        if line.startswith("More:"):
+            continue
+        if port_re.search(line):
+            lines.append(line)
+        if len(lines) >= max_lines:
             break
 
-    lines = []
-    for line in output.splitlines():
-        line = line.strip()
-        # точное совпадение порта с границами слова \b
-        if re.search(rf"\b{re.escape(short_port)}\b", line, re.I):
-            # исключаем строки с MAC-адресами
-            if not re.search(r"[0-9a-f]{2}(:[0-9a-f]{2}){5}", line, re.I):
-                lines.append(line)
+    return lines
 
-    return lines[:max_lines]
 
-# ================== MAIN ==================
+# ============================================================
+# MAIN
+# ============================================================
 async def main():
     host, password, port = get_user_input()
 
-    data = await eltex_telnet_collect(host, password)
-    if not find_mes_presence(data):
-        print("❌ Устройство не является MES или не определено.")
-        return
+    # <<< ЕДИНСТВЕННОЕ ПРЕОБРАЗОВАНИЕ ПОРТА >>>
+    cli_port = f"1/0/{port}"
 
-    sys_info = parse_switch_info(data.get("system", ""))
-    if not sys_info:
-        print("⚠ Не удалось извлечь данные о коммутаторе.")
-        return
+    reader, writer = await telnet_login(host, password)
+
+    detect_out = await send_command(
+        reader, writer,
+        "show system | include MES"
+    )
+
+    device = fast_detect_device(detect_out)
 
     print("\n===== SWITCH DATA =====")
-    print(f"✔ Модель: {sys_info['model']}")
-    print(f"✔ Порты: {sys_info['ports']}")
-    print(f"✔ Скорость коммутатора: {sys_info['speed']}")
+    print(f"✔ Vendor: {device['vendor']}")
+    print(f"✔ Model: {device['model']}")
+    print(f"✔ Ports: {device['ports']}")
+    print(f"✔ Speed: {device['speed']}")
 
-    int_type = determine_interface_type(sys_info['speed'])
-    short_port = f"{int_type[0:2].lower()}{port}"  # fa/gi
+    int_type = determine_interface_type(device["speed"])
+    short_port = f"{int_type[:2].lower()}{cli_port}"
 
-    reader, writer = await telnetlib3.open_connection(host=host, port=23)
-    for cred in ["admin", password]:
-        writer.write(cred + "\n")
-        await asyncio.sleep(0.5)
+    int_out = await send_command(
+        reader, writer,
+        f"show interfaces {int_type} {cli_port}"
+    )
 
-    # ===== Данные порта =====
-    interface_cmd = f"show interfaces {int_type} {port}"
-    int_output = await send_command(reader, writer, interface_cmd)
-    port_info = parse_interface(int_output)
+    port_info = parse_interface(int_out)
 
-    if port_info["status"] == "down":
-        print('\n[ L1 ] Возможна физическая проблема:')
-        print(f"❌ Порт {port} не активен (DOWN).")
-        print('Проверьте кабель / питание / подключение роутера')
-        writer.close()
-        return
+    print("\n===== PORT STATE =====")
+    print(f"Порт {cli_port}: {port_info['status'].upper()}")
 
-    print("\n===== LINK =====")
-    print(f"Статус: {port_info['status']}")
-    print(f"Скорость линка: {port_info['link_speed']}")
-    print(f"Тип медиа: {port_info['media_type']}")
+    if port_info["status"] == "up":
+        print("\n===== LINK =====")
+        print(f"Speed: {port_info['link_speed']}")
+        print(f"Media: {port_info['media_type']}")
 
-    print("\n===== PORT TRAFFIC =====")
-    print(f"Input rate: {port_info['input_rate']} Kbit/s")
-    print(f"Output rate: {port_info['output_rate']} Kbit/s")
+        print("\n===== TRAFFIC =====")
+        print(f"Input: {port_info['input_rate']} Kbit/s")
+        print(f"Output: {port_info['output_rate']} Kbit/s")
 
-    print('\n===== PORT ERRORS =====')
-    print(f"Input errors: {port_info['input_errors']}")
-    print(f"Output errors: {port_info['output_errors']}")
+        print("\n===== ERRORS =====")
+        print(f"Input errors: {port_info['input_errors']}")
+        print(f"Output errors: {port_info['output_errors']}")
 
-    # ===== MAC-адреса =====
-    await asyncio.sleep(0.5)
-    mac_cmd = f"show mac address-table interface {int_type} {port}"
-    mac_output = await send_command(reader, writer, mac_cmd)
-    await asyncio.sleep(0.5)
-    mac_entries = parse_mac_table(mac_output)
-    
-    if mac_entries:
-        print(f"\n===== PORT MAC/VLAN =====")
-        for entry in mac_entries:
-            print(f"MAC: {entry['mac']}\nVLAN: {entry['vlan']}\nType: {entry['type']}")
+        mac_out = await send_command(
+            reader, writer,
+            f"show mac address-table interface {int_type} {cli_port}"
+        )
+
+        macs = parse_mac_table(mac_out)
+
+        if macs:
+            print("\n===== MAC TABLE =====")
+            for m in macs:
+                print(f"MAC: {m['mac']} VLAN: {m['vlan']} TYPE: {m['type']}")
+        else:
+            print("\n⚠ MAC не найдены")
+
+    log_out = await send_command(
+        reader, writer,
+        f"show logging | include {short_port}"
+    )
+
+    logs = parse_logs(log_out, short_port)
+
+    print("\n===== LOGS =====")
+    if logs:
+        for l in logs:
+            print(l)
     else:
-        print(f"⚠ MAC-адреса для порта {port} не найдены.")
+        print("⚠ Логи не найдены")
 
-    # ===== Логи порта =====
-    await asyncio.sleep(0.5)
-    port_logs = await get_port_logs(reader, writer, short_port, max_lines=15)
     writer.close()
 
-    if port_logs:
-        print(f"\n===== DEVICE LOGS =====")
-        for line in port_logs:
-            print(line)
-    else:
-        print(f"⚠ Логи для порта {short_port} не найдены.")
 
-# ================== RUN ==================
+# ============================================================
+# RUN
+# ============================================================
 if __name__ == "__main__":
     asyncio.run(main())

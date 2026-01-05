@@ -4,8 +4,6 @@ from .parsers.snr_ipoe_interface import snr_ipoe_interface
 from .parsers.snr_ipoe_mac import snr_ipoe_mac
 from .parsers.snr_ipoe_logs import snr_collect_logs
 
-
-
 def build_query_plan(port: str, model: str):
     plan = [
         {
@@ -29,6 +27,5 @@ def build_query_plan(port: str, model: str):
             "parser": lambda r, w, p: snr_collect_logs(r, w, p, model),
         }
     )
-
 
     return plan

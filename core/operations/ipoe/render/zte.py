@@ -1,7 +1,4 @@
-# ipoe/adapter/ZTE/render/zte.py
-
 from core.operations.ipoe.adapter.ZTE.tables.zte_report import print_zte_report
-
 
 class ZTERenderer:
     def render(self, data: dict, port: str) -> None:

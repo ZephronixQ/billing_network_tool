@@ -2,6 +2,7 @@ SNR_MODEL_PORTS = {
     "S2965-8T": (8, 2),
     "S2965-24T": (24, 4),
     "S2985G-48T": (48, 4),
+    "S2990G-48T": (48, 4),
 }
 
 SNR_LOG_INCLUDE_MODELS = {
