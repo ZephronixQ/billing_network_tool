@@ -51,6 +51,64 @@ billing_network_tool/
 │       │   │   ├── factory.py
 │       │   │   │   # get_adapter(vendor, reader, writer)
 │       │   │   │
+│       │   │   ├── ELTEX/
+│       │   │   │   ├── __init__.py
+│       │   │   │   │
+│       │   │   │   ├── adapter.py
+│       │   │   │   │   # ELTEXIPoEAdapter
+│       │   │   │   │   # collect()
+│       │   │   │   │
+│       │   │   │   ├── commands.py
+│       │   │   │   │   # SHOW_SYSTEM_MES
+│       │   │   │   │   # SHOW_VERSION
+│       │   │   │   │   # SHOW_INTERFACE
+│       │   │   │   │   # SHOW_MAC_TABLE
+│       │   │   │   │   # SHOW_LOGGING_INCLUDE
+│       │   │   │   │
+│       │   │   │   ├── query.py
+│       │   │   │   │   # build_query_plan(port)
+│       │   │   │   │   # key + commands + parser
+│       │   │   │   │
+│       │   │   │   ├── constants.py
+│       │   │   │   │   # all constants SNR (MODEL, REGEX, SPEED DEVICE, DEFAULT_LOG_LINES)
+│       │   │   │   │
+│       │   │   │   ├── parsers/
+│       │   │   │   │   ├── __init__.py
+│       │   │   │   │   │
+│       │   │   │   │   ├── eltex_ipoe_device.py
+│       │   │   │   │   │   # parse_device()
+│       │   │   │   │   │
+│       │   │   │   │   ├── eltex_ipoe_interface.py
+│       │   │   │   │   │   # determine_interface_type()
+│       │   │   │   │   │   # parse_interface()
+│       │   │   │   │   │
+│       │   │   │   │   ├── eltex_ipoe_logs.py
+│       │   │   │   │   │   # parse_logs()
+│       │   │   │   │   │
+│       │   │   │   │   └── eltex_ipoe_mac.py
+│       │   │   │   │       # parse_mac_table()
+│       │   │   │   │
+│       │   │   │   └── tables/
+│       │   │   │       ├── __init__.py
+│       │   │   │       │
+│       │   │   │       ├── eltex_device.py
+│       │   │   │       │   # print_device_info()
+│       │   │   │       │
+│       │   │   │       ├── eltex_stats.py
+│       │   │   │       │   # print_port_stats()
+│       │   │   │       │
+│       │   │   │       ├── eltex_mac.py
+│       │   │   │       │   # print_mac()
+│       │   │   │       │
+│       │   │   │       ├── eltex_port.py
+│       │   │   │       │   # print_port_status()
+│       │   │   │       │
+│       │   │   │       ├── eltex_peport.py
+│       │   │   │       │   # print_port_report()
+│       │   │   │       │
+│       │   │   │       └── eltex_logs.py
+│       │   │   │           # print_logs()
+│       │   │   │
 │       │   │   ├── SNR/
 │       │   │   │   ├── __init__.py
 │       │   │   │   │
@@ -95,20 +153,21 @@ billing_network_tool/
 │       │   │   │       ├── snr_errors.py
 │       │   │   │       │   # print_port_errors()
 │       │   │   │       │
-│       │   │   │       ├── zte_mac.py
+│       │   │   │       ├── snr_mac.py
 │       │   │   │       │   # print_mac()
 │       │   │   │       │
-│       │   │   │       ├── zte_traffic.py
+│       │   │   │       ├── snr_traffic.py
 │       │   │   │       │   # print_port_traffic()
 │       │   │   │       │
-│       │   │   │       ├── zte_port.py
+│       │   │   │       ├── snr_port.py
 │       │   │   │       │   # print_port_status()
 │       │   │   │       │
-│       │   │   │       ├── zte_mac_peport.py
+│       │   │   │       ├── snr_peport.py
 │       │   │   │       │   # print_port_report()
 │       │   │   │       │
-│       │   │   │       └── zte_logs.py
+│       │   │   │       └── snr_logs.py
 │       │   │   │           # print_logs()
+│       │   │   │
 │       │   │   └── ZTE/
 │       │   │       ├── __init__.py
 │       │   │       │
@@ -171,7 +230,7 @@ billing_network_tool/
 │       │   │           ├── zte_mac_protect.py
 │       │   │           │   # print_mac_protect()
 │       │   │           │
-│       │   │           ├── zte_mac_peport.py
+│       │   │           ├── zte_peport.py
 │       │   │           │   # print_port_report()
 │       │   │           │
 │       │   │           └── zte_logs.py
@@ -195,6 +254,7 @@ billing_network_tool/
 │       │   │   ├── zte.py
 │       │   │   │   # ZTERenderer
 │       │   │   │   # orchestrates ZTE tables
+│       │   │   │
 │       │   │   └── zte.py
 │       │   │       # SNRRenderer
 │       │   │       # orchestrates SNR tables
@@ -207,6 +267,10 @@ billing_network_tool/
 │       │       │   # get_controller(vendor, reader, writer)
 │       │       │
 │       │       └── vendors/
+│       │           ├── ELTEX/
+│       │           │   └── conf_speed_and_port.py
+│       │           │       # ELTEXPortController
+│       │           │
 │       │           ├── ZTE/
 │       │           │   └── conf_speed_and_port.py
 │       │           │       # ZTEPortController

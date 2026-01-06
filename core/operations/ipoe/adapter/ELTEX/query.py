@@ -1,17 +1,10 @@
-from . import commands as cmd
-
 from .parsers.eltex_ipoe_device import parse_device
-from .parsers.eltex_ipoe_interface import (
-    determine_interface_type,
-    parse_interface,
-)
+from .parsers.eltex_ipoe_interface import parse_interface, resolve_eltex_interface
 from .parsers.eltex_ipoe_mac import parse_mac_table
 from .parsers.eltex_ipoe_logs import parse_logs
+from . import commands as cmd
 
-
-def build_query_plan(port: str):
-    cli_port = f"1/0/{port}"
-
+def build_query_plan(port: int):
     plan = [
         {
             "key": "device",
@@ -22,8 +15,12 @@ def build_query_plan(port: str):
             "key": "interface",
             "commands": lambda ctx: [
                 cmd.SHOW_INTERFACE.format(
-                    int_type=determine_interface_type(ctx["device"]["speed"]),
-                    port=cli_port,
+                    int_type=resolve_eltex_interface(
+                        ctx["device"]["model"], port
+                    )[0],
+                    port=resolve_eltex_interface(
+                        ctx["device"]["model"], port
+                    )[1],
                 )
             ],
             "parser": parse_interface,
@@ -33,12 +30,16 @@ def build_query_plan(port: str):
             "commands": lambda ctx: (
                 [
                     cmd.SHOW_MAC_TABLE.format(
-                        int_type=determine_interface_type(ctx["device"]["speed"]),
-                        port=cli_port,
+                        int_type=resolve_eltex_interface(
+                            ctx["device"]["model"], port
+                        )[0],
+                        port=resolve_eltex_interface(
+                            ctx["device"]["model"], port
+                        )[1],
                     )
                 ]
                 if ctx["interface"].get("status") == "up"
-                else []
+                else None
             ),
             "parser": parse_mac_table,
         },
@@ -47,14 +48,15 @@ def build_query_plan(port: str):
             "commands": lambda ctx: [
                 cmd.SHOW_LOGGING_INCLUDE.format(
                     short_port=(
-                        f"{determine_interface_type(ctx['device']['speed'])[:2].lower()}"
-                        f"{cli_port}"
+                        f"{resolve_eltex_interface(ctx['device']['model'], port)[0][:2].lower()}"
+                        f"{resolve_eltex_interface(ctx['device']['model'], port)[1]}"
                     )
                 )
             ],
-            "parser": lambda raw, ctx=None: parse_logs(
+            "parser": lambda raw, ctx: parse_logs(
                 raw,
-                f"{determine_interface_type(ctx['device']['speed'])[:2].lower()}{cli_port}",
+                f"{resolve_eltex_interface(ctx['device']['model'], port)[0][:2].lower()}"
+                f"{resolve_eltex_interface(ctx['device']['model'], port)[1]}",
             ),
         },
     ]

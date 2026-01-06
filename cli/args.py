@@ -1,6 +1,5 @@
 import argparse
 
-
 def parse_args():
     parser = argparse.ArgumentParser(add_help=False)
 
@@ -48,13 +47,6 @@ def parse_args():
         help="Restart IPOE port"
     )
 
-    # parser.add_argument(
-    #     "--speed",
-    #     type=int,
-    #     choices=[10, 100],
-    #     help="Set IPOE port speed (10 or 100)"
-    # )
-
     parser.add_argument(
         "--speed",
         metavar="MODE",
@@ -66,6 +58,5 @@ def parse_args():
             "force1g-full, force1g-half, force10g-full"
         )
     )
-
 
     return parser.parse_args()

@@ -8,16 +8,13 @@ from core.operations.onu.uncfg import run_uncfg
 from core.operations.onu.search import run_sn_search
 from core.operations.ipoe.service import run_ipoe
 
-
 logging.getLogger("telnetlib3").setLevel(logging.CRITICAL)
-
 
 def silent_asyncio_exception_handler(loop, context):
     exc = context.get("exception")
     if isinstance(exc, AssertionError):
         return
     loop.default_exception_handler(context)
-
 
 async def main():
     args = parse_args()
@@ -74,7 +71,6 @@ async def main():
         return
 
     print_help()
-
 
 if __name__ == "__main__":
     try:

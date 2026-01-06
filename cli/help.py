@@ -25,6 +25,7 @@ IPoE port control (SET commands):
   {YELLOW}--speed <MODE>{RESET}             Set IPoE port speed (vendor-specific)
 
 Speed modes:
+
   ZTE:
     10
     100
@@ -40,6 +41,21 @@ Speed modes:
     force1g-half
     force10g-full
 
+  ELTEX:
+    10
+    100
+    1000
+    10000
+
+ELTEX port logic:
+  - 28-port switches:
+      Ports 1–24   → FastEthernet 1/0/X
+      Ports 25–28  → GigabitEthernet 1/0/1–4
+  - 52-port switches:
+      Ports 1–48   → GigabitEthernet 1/0/X
+      Ports 49–52  → service / uplink ports (access denied)
+  - Device type is detected automatically at runtime.
+
 Examples:
   python3 main.py --uncfg
       Display all unregistered ONU on configured OLTs.
@@ -51,10 +67,13 @@ Examples:
       Show IPoE diagnostics for port 3.
 
   python3 main.py --ipoe 192.11.1.11 3 --speed 100
-      Set IPoE port 3 speed to 100 Mbps (ZTE).
+      Set IPoE port 3 speed to 100 Mbps (ZTE / ELTEX).
 
   python3 main.py --ipoe 192.11.1.11 2 --speed force100-full
       Set IPoE port 2 speed to force100-full (SNR).
+
+  python3 main.py --ipoe 192.11.1.11 26 --disable
+      Disable ELTEX Gigabit port (25–28 mapped to GE 1–4).
 
   python3 main.py --ipoe 192.11.1.11 3 --restart
       Restart IPoE port 3.
@@ -64,5 +83,6 @@ Notes:
   - SET operations (--disable / --enable / --restart / --speed)
     automatically switch device to privileged (enable) mode.
   - Speed validation is performed per vendor.
-  - Vendor-specific CLI logic is fully encapsulated internally.
+  - Vendor-specific CLI logic and port mapping
+    are fully encapsulated internally.
 """)
