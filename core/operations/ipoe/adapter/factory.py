@@ -1,13 +1,13 @@
 from core.operations.ipoe.adapter.ZTE.adapter import ZTEIPoeAdapter
 from core.operations.ipoe.adapter.SNR.adapter import SNRIPoeAdapter
 from core.operations.ipoe.adapter.ELTEX.adapter import ELTEXIPoEAdapter
-# from core.operations.ipoe.adapter.DLINK.adapter import DLinkIPoeAdapter
+from core.operations.ipoe.adapter.DLink.adapter import DLinkIPoeAdapter
 
 VENDOR_ADAPTERS = {
     "ZTE": ZTEIPoeAdapter,
     "SNR": SNRIPoeAdapter,
     "ELTEX": ELTEXIPoEAdapter,
-    # "D-LINK": DLinkIPoeAdapter,
+    "DLINK": DLinkIPoeAdapter,
 }
 
 def get_adapter(vendor: str, reader, writer):

@@ -10,17 +10,32 @@ from core.operations.ipoe.service import run_ipoe
 
 logging.getLogger("telnetlib3").setLevel(logging.CRITICAL)
 
+
 def silent_asyncio_exception_handler(loop, context):
     exc = context.get("exception")
     if isinstance(exc, AssertionError):
         return
     loop.default_exception_handler(context)
 
+
 async def main():
     args = parse_args()
 
     if args.help:
         print_help()
+        return
+
+    # ───── IPOE MASS STATUS CHECK ─────
+    if args.ipoe_info_status:
+        if not args.patch:
+            print("Укажи путь к файлу с IP через --patch")
+            return
+
+        from core.operations.info.info_ipoe_status import run_ipoe_info_status
+
+        run_ipoe_info_status(
+            patch=args.patch
+        )
         return
 
     if args.gpon:
@@ -71,6 +86,7 @@ async def main():
         return
 
     print_help()
+
 
 if __name__ == "__main__":
     try:

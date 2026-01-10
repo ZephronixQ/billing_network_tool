@@ -24,6 +24,17 @@ async def detect_vendor(reader, writer) -> str:
     ):
         return "SNR"
 
+    # ---------- D-LINK ----------
+    if (
+        "d-link" in text
+        or "dlink" in text
+        or "d-link corporation" in text
+        or "des-" in text
+        or "dgs-" in text
+        or "dxs-" in text
+    ):
+        return "DLINK"
+
     # ---------- ELTEX ----------
     if (
         "eltex" in text

@@ -10,11 +10,7 @@ from .parsers.zte_ipoe_mac import parse_zte_mac
 from .parsers.zte_ipoe_dhcp import parse_dhcp_relay
 from .parsers.zte_ipoe_logs import parse_device_logs
 
-
 def build_query_plan(port: str):
-    """
-    Описывает ЧТО и КАК мы собираем
-    """
     return [
         {
             "key": "device",
@@ -38,7 +34,7 @@ def build_query_plan(port: str):
         },
         {
             "key": "dhcp",
-            "commands": cmd.SHOW_DHCP,
+            "commands": cmd.show_dhcp(port),
             "parser": parse_dhcp_relay,
         },
         {

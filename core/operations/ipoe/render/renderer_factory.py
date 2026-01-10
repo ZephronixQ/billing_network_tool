@@ -1,6 +1,7 @@
 from core.operations.ipoe.render.zte import ZTERenderer
 from core.operations.ipoe.render.snr import SNRRenderer
 from core.operations.ipoe.render.eltex import ELTEXRenderer
+from core.operations.ipoe.render.dlink import DlinkRenderer
 
 def get_renderer(vendor: str):
     vendor = vendor.upper()
@@ -11,7 +12,10 @@ def get_renderer(vendor: str):
     if vendor == "SNR":
         return SNRRenderer()
 
+    if vendor == "DLINK":
+        return DlinkRenderer()
+
     if vendor == "ELTEX":
         return ELTEXRenderer()
-
+    
     raise ValueError(f"No renderer for vendor {vendor}")

@@ -59,4 +59,17 @@ def parse_args():
         )
     )
 
+    # ───── НОВЫЙ ФЛАГ ДЛЯ МАССОВОЙ ПРОВЕРКИ ─────
+    parser.add_argument(
+        "--ipoe-info-status",
+        action="store_true",
+        help="Run IPOE status check for multiple IPs from file"
+    )
+
+    parser.add_argument(
+        "--patch",
+        metavar="FILE",
+        help="Path to file with IP addresses"
+    )
+
     return parser.parse_args()

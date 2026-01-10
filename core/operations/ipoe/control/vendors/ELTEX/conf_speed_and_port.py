@@ -6,7 +6,6 @@ from core.operations.ipoe.adapter.ELTEX.parsers.eltex_ipoe_interface import (
     resolve_eltex_interface,
 )
 
-
 class ELTEXPortController(BaseIPoEController):
     vendor = "ELTEX"
 

@@ -9,7 +9,8 @@ def show_port_util(port: str):
 def show_mac(port: str):
     return [f"show mac dynamic port {port}"]
 
-SHOW_DHCP = ["show dhcp relay binding"]
+def show_dhcp(port: str):
+    return [f"show dhcp relay binding port {port}"]
 
 def show_statistics(port: str):
     return [f"show port {port} statistics"]

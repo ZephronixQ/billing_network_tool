@@ -31,6 +31,19 @@ billing_network_tool/
 │   │
 │   └── operations/
 │       │
+│       ├── info/
+│       │   ├── __init__.py
+│       │   │
+│       │   ├── info_ipoe_status.py
+│       │   │
+│       │   ├── info_gpon_status.py
+│       │   |
+│       │   └── output/
+│       │       ├── info_ipoe_status.py
+│       │       │
+│       │       └── info_gpon_status.py
+│       │
+│       │  
 │       ├── ipoe/
 │       │   ├── __init__.py
 │       │   │
@@ -50,6 +63,72 @@ billing_network_tool/
 │       │   │   │
 │       │   │   ├── factory.py
 │       │   │   │   # get_adapter(vendor, reader, writer)
+│       │   │   │
+│       │   │   ├── ELTEX/
+│       │   │   │   ├── __init__.py
+│       │   │   │   │
+│       │   │   │   ├── adapter.py
+│       │   │   │   │   # DLinkIPoeAdapter
+│       │   │   │   │   # collect()
+│       │   │   │   │
+│       │   │   │   ├── commands.py
+│       │   │   │   │   # SHOW_SWITCH
+│       │   │   │   │   # DISABLE_CLIPAGING
+│       │   │   │   │   # SHOW_PORTS
+│       │   │   │   │   # SHOW_FDB_PORT
+│       │   │   │   │   # SHOW_SPEED
+│       │   │   │   │   # SHOW_ERROR
+│       │   │   │   │   # SHOW_LOG
+│       │   │   │   │   # ENABLE_CLIPAGING
+│       │   │   │   │
+│       │   │   │   ├── query.py
+│       │   │   │   │   # build_query_plan(port)
+│       │   │   │   │   # key + commands + parser
+│       │   │   │   │
+│       │   │   │   ├── constants.py
+│       │   │   │   │   # all constants D-Link (MODEL and REGEX)
+│       │   │   │   │
+│       │   │   │   ├── parsers/
+│       │   │   │   │   ├── __init__.py
+│       │   │   │   │   │
+│       │   │   │   │   ├── dlink_ipoe_device.py
+│       │   │   │   │   │   # parse_device_model()
+│       │   │   │   │   │
+│       │   │   │   │   ├── dlink_ipoe_traffic.py
+│       │   │   │   │   │   # parse_port_bytes()
+│       │   │   │   │   │
+│       │   │   │   │   ├── dlink_ipoe_errors.py
+│       │   │   │   │   │   # parse_port_errors()
+│       │   │   │   │   │
+│       │   │   │   │   ├── dlink_ipoe_port.py
+│       │   │   │   │   │   # parse_port()
+│       │   │   │   │   │
+│       │   │   │   │   ├── dlink_ipoe_logs.py
+│       │   │   │   │   │   # get_device_logs()
+│       │   │   │   │   │
+│       │   │   │   │   └── dlink_ipoe_mac.py
+│       │   │   │   │       # parse_port_macs()
+│       │   │   │   │
+│       │   │   │   └── tables/
+│       │   │   │       ├── __init__.py
+│       │   │   │       │
+│       │   │   │       ├── dlink_device.py
+│       │   │   │       │   # print_device_info()
+│       │   │   │       │
+│       │   │   │       ├── dlink_stats.py
+│       │   │   │       │   # print_port_stats()
+│       │   │   │       │
+│       │   │   │       ├── dlink_mac.py
+│       │   │   │       │   # print_mac()
+│       │   │   │       │
+│       │   │   │       ├── dlink_port.py
+│       │   │   │       │   # print_port_status()
+│       │   │   │       │
+│       │   │   │       ├── dlink_peport.py
+│       │   │   │       │   # print_port_report()
+│       │   │   │       │
+│       │   │   │       └── dlinl_logs.py
+│       │   │   │           # print_logs()
 │       │   │   │
 │       │   │   ├── ELTEX/
 │       │   │   │   ├── __init__.py
@@ -267,6 +346,10 @@ billing_network_tool/
 │       │       │   # get_controller(vendor, reader, writer)
 │       │       │
 │       │       └── vendors/
+│       │           ├── DLINK/
+│       │           │   └── conf_speed_and_port.py
+│       │           │       # ELTEXPortController
+│       │           │
 │       │           ├── ELTEX/
 │       │           │   └── conf_speed_and_port.py
 │       │           │       # ELTEXPortController

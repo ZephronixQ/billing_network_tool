@@ -136,7 +136,7 @@ async def send_ipoe(
     commands,
     *,
     prompt_re=DEFAULT_PROMPT_RE,
-    handle_paging: bool = False,
+    handle_paging: bool = True,
 ) -> str:
     output = ""
 
@@ -155,10 +155,7 @@ async def send_ipoe(
 
     return output
 
-
-
 ELTEX_PROMPT_RE = re.compile(r"\n?\S+#\s*$")
-
 
 async def send_ipoe_eltex(
     reader,
@@ -201,5 +198,83 @@ async def send_ipoe_eltex(
                 break
 
         output += buf
+
+    return output
+
+# =========================
+# D-LINK 
+# =========================
+# ---------- REGEX ----------
+
+ANSI_RE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+PROMPT_RE = re.compile(r"[>#]\s*$")
+PAGER_RE = re.compile(r'CTRL\+C.*Quit', re.IGNORECASE)
+
+# ---------- CLEAN ----------
+
+def clean(line: str) -> str:
+    line = ANSI_RE.sub('', line)
+    line = re.sub(r"[^\x20-\x7E]+", " ", line)
+    return line.strip()
+
+# ---------- READ ----------
+
+async def read_until_prompt_dlink(
+    reader,
+    writer=None,
+    *,
+    timeout: float = 3.0,
+    quiet: float = 1.5,
+) -> list[str]:
+
+    lines: list[str] = []
+    loop = asyncio.get_event_loop()
+    last_data = loop.time()
+
+    while True:
+        try:
+            chunk = await asyncio.wait_for(reader.read(4096), timeout)
+        except asyncio.TimeoutError:
+            if loop.time() - last_data >= quiet:
+                break
+            continue
+
+        if not chunk:
+            break
+
+        last_data = loop.time()
+
+        for raw in chunk.splitlines():
+            cl = clean(raw)
+            if cl:
+                lines.append(cl)
+
+        if PROMPT_RE.search(chunk):
+            break
+
+    return lines
+
+# ---------- SEND ----------
+
+async def send_ipoe_dlink(
+    reader,
+    writer,
+    commands: list[str],
+) -> list[str]:
+
+    output: list[str] = []
+
+    for cmd in commands:
+        writer.write(cmd + "\n")
+        await writer.drain()
+
+        lines = await read_until_prompt_dlink(
+            reader,
+            writer,
+            timeout=3.0,
+            quiet=1.5,
+        )
+
+        output.extend(lines)
 
     return output

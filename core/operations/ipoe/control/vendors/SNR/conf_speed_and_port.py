@@ -1,12 +1,9 @@
 import asyncio
-
 from core.connection.telnet import send_ipoe
 from core.operations.ipoe.control.base import BaseIPoEController
 
-
 class SNRPortController(BaseIPoEController):
     vendor = "SNR"
-
     VALID_SPEEDS = {
         "auto",
         "force10-full",
