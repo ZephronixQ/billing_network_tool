@@ -72,4 +72,10 @@ def parse_args():
         help="Path to file with IP addresses"
     )
 
+    parser.add_argument(
+        "--gpon-info-status",
+        action="store_true",
+        help="Run GPON ONU status check for multiple OLTs"
+    )
+
     return parser.parse_args()

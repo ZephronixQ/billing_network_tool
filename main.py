@@ -38,18 +38,27 @@ async def main():
         )
         return
 
+    # ───── GPON MASS STATUS CHECK ─────
+    if args.gpon_info_status:
+        from core.operations.info.info_gpon_status import main as gpon_main
+        await gpon_main()
+        return
+
+    # ───── SN SEARCH ─────
     if args.gpon:
         await run_sn_search(args.gpon)
         return
 
+    # ───── ONU UNCFG ─────
     if args.uncfg:
         await run_uncfg()
         return
 
+    # ───── IPOE PORT CONTROL / DIAGNOSTICS ─────
     if args.ipoe:
         ip, port = args.ipoe
 
-        # ───── IPOE PORT CONTROL (SET) ─────
+        # PORT CONTROL (SET)
         if args.disable or args.enable or args.restart or args.speed:
             from core.connection.telnet import connect
             from core.operations.ipoe.detect_vendor import detect_vendor
@@ -78,13 +87,14 @@ async def main():
 
             return
 
-        # ───── IPOE DIAGNOSTICS (SHOW) ─────
+        # DIAGNOSTICS (SHOW)
         await run_ipoe(
             host=ip,
             port=port,
         )
         return
 
+    # ───── Показать помощь, если ничего не выбрано ─────
     print_help()
 
 

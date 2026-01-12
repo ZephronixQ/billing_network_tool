@@ -19,7 +19,6 @@ def build_query_plan(port: str, model: str):
         },
     ]
 
-    # logs — условный шаг
     plan.append(
         {
             "key": "logs",

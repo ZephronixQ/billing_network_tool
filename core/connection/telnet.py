@@ -144,14 +144,23 @@ async def send_ipoe(
         writer.write(cmd + "\n")
         await writer.drain()
 
+        # ждём появления prompt
         chunk = await read_until_prompt(
             reader,
             writer,
             prompt_re=prompt_re,
             handle_paging=handle_paging,
         )
-
         output += chunk
+
+        while True:
+            try:
+                tail = await asyncio.wait_for(reader.read(1024), timeout=0.05)
+                if not tail:
+                    break
+                output += tail.decode(errors="ignore") if isinstance(tail, bytes) else tail
+            except asyncio.TimeoutError:
+                break
 
     return output
 
