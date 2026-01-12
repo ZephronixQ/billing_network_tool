@@ -29,23 +29,9 @@ def parse_args():
     )
 
     # ───── IPOE CONTROL FLAGS ─────
-    parser.add_argument(
-        "--disable",
-        action="store_true",
-        help="Disable IPOE port"
-    )
-
-    parser.add_argument(
-        "--enable",
-        action="store_true",
-        help="Enable IPOE port"
-    )
-
-    parser.add_argument(
-        "--restart",
-        action="store_true",
-        help="Restart IPOE port"
-    )
+    parser.add_argument("--disable", action="store_true", help="Disable port")
+    parser.add_argument("--enable", action="store_true", help="Enable port")
+    parser.add_argument("--restart", action="store_true", help="Restart port")
 
     parser.add_argument(
         "--speed",
@@ -59,23 +45,52 @@ def parse_args():
         )
     )
 
-    # ───── НОВЫЙ ФЛАГ ДЛЯ МАССОВОЙ ПРОВЕРКИ ─────
+    # ───── GPON REMOVE ONU ─────
+    parser.add_argument(
+        "--remove",
+        action="store_true",
+        help="Remove ONU from OLT (GPON)"
+    )
+
+    # ───── IPOE MASS STATUS CHECK ─────
     parser.add_argument(
         "--ipoe-info-status",
         action="store_true",
         help="Run IPOE status check for multiple IPs from file"
     )
 
-    parser.add_argument(
-        "--patch",
-        metavar="FILE",
-        help="Path to file with IP addresses"
-    )
+    parser.add_argument("--patch", metavar="FILE")
 
+    # ───── GPON MASS STATUS ─────
     parser.add_argument(
         "--gpon-info-status",
         action="store_true",
         help="Run GPON ONU status check for multiple OLTs"
+    )
+
+    # ───── GPON INTERFACE CONF ─────
+    parser.add_argument(
+        "--gpon-conf",
+        action="store_true",
+        help="Special interface control for master (enable/disable whole interface)"
+    )
+
+    parser.add_argument(
+        "--user",
+        metavar="USERNAME",
+        help="Encrypted username for special interface control"
+    )
+
+    parser.add_argument(
+        "--olt",
+        metavar="OLT_IP",
+        help="Target OLT IP for interface control"
+    )
+
+    parser.add_argument(
+        "--interface",
+        metavar="INTERFACE",
+        help="Target interface, e.g., 1/1/10"
     )
 
     return parser.parse_args()

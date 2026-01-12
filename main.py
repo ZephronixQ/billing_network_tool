@@ -5,8 +5,10 @@ from cli.args import parse_args
 from cli.help import print_help
 
 from core.operations.onu.uncfg import run_uncfg
-from core.operations.onu.search import run_sn_search
+from core.operations.onu.search import run_sn_search, adapter, SEM, SWITCHES
 from core.operations.ipoe.service import run_ipoe
+from core.connection.telnet import connect
+from core.operations.onu.control.vendors.ZTE.conf_port import ZTEPortController
 
 logging.getLogger("telnetlib3").setLevel(logging.CRITICAL)
 
@@ -32,10 +34,7 @@ async def main():
             return
 
         from core.operations.info.info_ipoe_status import run_ipoe_info_status
-
-        run_ipoe_info_status(
-            patch=args.patch
-        )
+        run_ipoe_info_status(patch=args.patch)
         return
 
     # ───── GPON MASS STATUS CHECK ─────
@@ -45,7 +44,7 @@ async def main():
         return
 
     # ───── SN SEARCH ─────
-    if args.gpon:
+    if args.gpon and not (args.disable or args.enable or args.restart or args.remove):
         await run_sn_search(args.gpon)
         return
 
@@ -58,43 +57,118 @@ async def main():
     if args.ipoe:
         ip, port = args.ipoe
 
-        # PORT CONTROL (SET)
         if args.disable or args.enable or args.restart or args.speed:
-            from core.connection.telnet import connect
             from core.operations.ipoe.detect_vendor import detect_vendor
             from core.operations.ipoe.control.factory import get_controller
 
             reader, writer = await connect(ip)
-
             try:
                 vendor = await detect_vendor(reader, writer)
                 controller = get_controller(vendor, reader, writer)
 
                 if args.disable:
                     await controller.disable_port(port)
-
                 elif args.enable:
                     await controller.enable_port(port)
-
                 elif args.restart:
                     await controller.restart_port(port)
-
                 elif args.speed:
                     await controller.set_port_speed(port, args.speed)
 
             finally:
                 writer.close()
-
+                await writer.wait_closed()
             return
 
-        # DIAGNOSTICS (SHOW)
-        await run_ipoe(
-            host=ip,
-            port=port,
-        )
+        await run_ipoe(host=ip, port=port)
         return
 
-    # ───── Показать помощь, если ничего не выбрано ─────
+    # ───── GPON PORT CONTROL / REMOVE ─────
+    if args.gpon and (args.disable or args.enable or args.restart or args.remove):
+
+        # --- 1. Найти ONU на OLT ---
+        result = None
+        async with SEM:
+            for host in SWITCHES:
+                try:
+                    r = await adapter.search_by_sn(host, args.gpon)
+                    if r:
+                        iface = r.get("interface") or r.get("port") or r.get("iface")
+                        if iface:
+                            result = {"host": host, "interface": iface}
+                            break
+                except Exception:
+                    continue
+
+        if not result:
+            print(f"❌ ONU {args.gpon} not found on any switch")
+            return
+
+        host = result["host"]
+        iface = result["interface"]
+
+        # --- 2. Подключение к найденному OLT ---
+        reader, writer = await connect(host)
+        try:
+            controller = ZTEPortController(reader, writer, host, iface)
+
+            if args.disable:
+                await controller.disable_port()
+
+            elif args.enable:
+                await controller.enable_port()
+
+            elif args.restart:
+                await controller.restart_port()
+
+            elif args.remove:
+                await controller.delete_onu()
+                print(f"✅ ONU {args.gpon} successfully removed")
+
+        finally:
+            writer.close()
+            await writer.wait_closed()
+
+        return
+
+    # ───── GPON INTERFACE CONF (MASTER) ─────
+    if args.gpon_conf:
+        from core.operations.onu.control.vendors.ZTE.olt_conf_port import ZTEInterfaceController
+
+        if not all([args.user, args.olt, args.interface]):
+            print("❌ Для --gpon-conf необходимо указать --user, --olt и --interface")
+            return
+
+        if not (args.disable or args.enable):
+            print("❌ Для --gpon-conf можно использовать только --disable или --enable")
+            return
+
+        reader, writer = await connect(args.olt)
+        try:
+            controller = ZTEInterfaceController(
+                reader, writer,
+                host=args.olt,
+                interface=args.interface,
+                user_token=args.user
+            )
+
+            if args.disable:
+                await controller.disable_interface()
+                print(f"✅ Interface {args.interface} on {args.olt} disabled")
+
+            elif args.enable:
+                await controller.enable_interface()
+                print(f"✅ Interface {args.interface} on {args.olt} enabled")
+
+        except Exception as e:
+            print(f"❌ Ошибка: {e}")
+
+        finally:
+            writer.close()
+            await writer.wait_closed()
+        return
+
+    # ───── HELP ─────
     print_help()
 
 

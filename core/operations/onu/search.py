@@ -1,5 +1,3 @@
-# core/operations/onu/run/search_sn.py
-
 import asyncio
 from config.secrets import SWITCHES
 
