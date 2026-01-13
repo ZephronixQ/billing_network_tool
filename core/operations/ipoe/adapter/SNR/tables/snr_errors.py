@@ -1,10 +1,8 @@
 from output.colors import BLUE, RED, YELLOW, RESET
 from output.table_base import render_table
 
-
 def _c(val: str, color: str) -> str:
     return f"{color}{val}{RESET}"
-
 
 def print_port_errors(iface: dict):
     headers = [

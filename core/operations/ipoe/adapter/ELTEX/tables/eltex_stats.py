@@ -1,8 +1,5 @@
-# core/operations/ipoe/adapter/ELTEX/tables/eltex_stats.py
-
 from output.colors import BLUE, CYAN, RED, RESET
 from output.table_base import render_table
-
 
 def print_port_stats(iface: dict):
     headers = [

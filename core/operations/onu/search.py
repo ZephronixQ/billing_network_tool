@@ -13,14 +13,12 @@ from output.colors import CYAN, RESET
 adapter = ZteZxanOltAdapter()
 SEM = asyncio.Semaphore(len(SWITCHES))
 
-
 async def search_on_switch(host: str, serial: str):
     async with SEM:
         try:
             return await adapter.search_by_sn(host, serial)
         except Exception:
             return None
-
 
 async def run_sn_search(serial: str):
     tasks = [

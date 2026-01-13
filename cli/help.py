@@ -1,88 +1,115 @@
 from output.colors import BLUE, GREEN, YELLOW, RESET
 
-
-def print_help():
+def print_root_help():
     print(f"""
 {BLUE}Billing Network Tool{RESET}
 
 Usage:
   python3 main.py [OPTIONS]
 
-General options:
-  {GREEN}--help{RESET}                      Show this help message
+Available commands:
+  {GREEN}--uncfg{RESET}
+      Show unregistered ONU on all configured OLTs
 
-ONU / GPON operations:
-  {GREEN}--uncfg{RESET}                     Show unregistered ONU on all configured OLTs
-  {GREEN}--gpon <SERIAL>{RESET}             Search ONU by GPON serial number
+  {GREEN}--gpon <SERIAL>{RESET}
+      GPON ONU diagnostics and control by serial number
 
-IPoE operations:
-  {GREEN}--ipoe <IP> <PORT>{RESET}          Run IPoE diagnostics (show commands)
+  {GREEN}--ipoe <IP> <PORT>{RESET}
+      IPoE port diagnostics and control
 
-IPoE port control (SET commands):
-  {YELLOW}--disable{RESET}                  Disable IPoE port
-  {YELLOW}--enable{RESET}                   Enable IPoE port
-  {YELLOW}--restart{RESET}                  Restart IPoE port (shutdown / no shutdown)
-  {YELLOW}--speed <MODE>{RESET}             Set IPoE port speed (vendor-specific)
+  {GREEN}--gpon-info-status --patch <FILE>{RESET}
+      Mass GPON ONU status check for multiple OLTs
 
-Speed modes:
+  {GREEN}--ipoe-info-status --patch <FILE>{RESET}
+      Mass IPoE port status check for multiple devices
 
-  ZTE:
-    10
-    100
+Use:
+  python3 main.py <command> --help
+to see command-specific options
+""")
 
-  SNR:
-    auto
-    force10-full
-    force10-half
-    force100-full
-    force100-fx
-    force100-half
-    force1g-full
-    force1g-half
-    force10g-full
+def print_gpon_help():
+    print(f"""
+{BLUE}GPON ONU operations{RESET}
 
-  ELTEX:
-    10
-    100
-    1000
-    10000
+Usage:
+  python3 main.py --gpon <SERIAL> [OPTIONS]
 
-ELTEX port logic:
-  - 28-port switches:
-      Ports 1–24   → FastEthernet 1/0/X
-      Ports 25–28  → GigabitEthernet 1/0/1–4
-  - 52-port switches:
-      Ports 1–48   → GigabitEthernet 1/0/X
-      Ports 49–52  → service / uplink ports (access denied)
-  - Device type is detected automatically at runtime.
+Available options:
+  {YELLOW}--restart{RESET}
+      Restart GPON port (shutdown / no shutdown)
 
-Examples:
-  python3 main.py --uncfg
-      Display all unregistered ONU on configured OLTs.
+  {YELLOW}--disable{RESET}
+      Disable GPON port (ZTE)
 
-  python3 main.py --gpon ZTEG12345678
-      Search ONU by GPON serial number.
-
-  python3 main.py --ipoe 192.11.1.11 3
-      Show IPoE diagnostics for port 3.
-
-  python3 main.py --ipoe 192.11.1.11 3 --speed 100
-      Set IPoE port 3 speed to 100 Mbps (ZTE / ELTEX).
-
-  python3 main.py --ipoe 192.11.1.11 2 --speed force100-full
-      Set IPoE port 2 speed to force100-full (SNR).
-
-  python3 main.py --ipoe 192.11.1.11 26 --disable
-      Disable ELTEX Gigabit port (25–28 mapped to GE 1–4).
-
-  python3 main.py --ipoe 192.11.1.11 3 --restart
-      Restart IPoE port 3.
+  {YELLOW}--enable{RESET}
+      Enable GPON port (ZTE)
 
 Notes:
-  - Only one operation is executed per run.
-  - SET operations (--disable / --enable / --restart / --speed)
-    automatically switch device to privileged (enable) mode.
-  - Speed validation is performed per vendor.
-  - Vendor-specific CLI logic and port mapping
-    are fully encapsulated internally.
+  - GPON port is resolved automatically from ONU serial number
+  - Currently supported vendor: ZTE (ZXAN)
+
+Examples:
+  python3 main.py --gpon GPON11X21CA1
+  python3 main.py --gpon GPON11X21CA1 --restart
+""")
+
+def print_ipoe_help():
+    print(f"""
+{BLUE}IPoE port operations{RESET}
+
+Usage:
+  python3 main.py --ipoe <IP> <PORT> [OPTIONS]
+
+Available options:
+  {YELLOW}--disable{RESET}
+      Disable port
+
+  {YELLOW}--enable{RESET}
+      Enable port
+
+  {YELLOW}--restart{RESET}
+      Restart port (shutdown / no shutdown)
+
+  {YELLOW}--speed <MODE>{RESET}
+      Set port speed (vendor-specific)
+
+Examples:
+  python3 main.py --ipoe 192.11.6.169 20
+  python3 main.py --ipoe 192.11.6.169 20 --restart
+  python3 main.py --ipoe 192.11.6.169 20 --speed 100
+""")
+
+def print_gpon_info_help():
+    print(f"""
+{BLUE}GPON mass status check{RESET}
+
+Usage:
+  python3 main.py --gpon-info-status --patch <FILE>
+
+Description:
+  Performs GPON ONU status check for multiple OLTs.
+
+Notes:
+  - Patch file must contain OLT addresses (one per line)
+
+Example:
+  python3 main.py --gpon-info-status --patch olts.txt
+""")
+
+def print_ipoe_info_help():
+    print(f"""
+{BLUE}IPoE mass status check{RESET}
+
+Usage:
+  python3 main.py --ipoe-info-status --patch <FILE>
+
+Description:
+  Performs IPoE port status check for multiple devices.
+
+Notes:
+  - Patch file must contain device IP addresses (one per line)
+
+Example:
+  python3 main.py --ipoe-info-status --patch switches.txt
 """)

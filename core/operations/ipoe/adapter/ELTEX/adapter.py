@@ -4,7 +4,7 @@ from .query import build_query_plan
 
 class ELTEXIPoEAdapter(BaseIPoEAdapter):
     async def collect(self, port: int) -> dict:
-        plan = build_query_plan(port)  # <-- БЕЗ str()
+        plan = build_query_plan(port)
 
         result: dict = {}
         context: dict = {}

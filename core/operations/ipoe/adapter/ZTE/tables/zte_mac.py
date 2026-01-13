@@ -1,7 +1,6 @@
 from output.colors import GREEN, BLUE, YELLOW, MAGENTA, CYAN, RED, RESET
 from output.table_base import render_table
 
-
 def print_mac_table(mac_entry: dict | None):
     headers = [
         f"{BLUE}MAC ADDRESS{RESET}",

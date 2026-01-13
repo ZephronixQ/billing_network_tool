@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-
 class BaseGPONController(ABC):
     vendor: str
 

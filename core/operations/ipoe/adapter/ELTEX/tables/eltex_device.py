@@ -4,7 +4,6 @@ from output.table_base import render_table
 def _c(val: str, color: str) -> str:
     return f"{color}{val}{RESET}"
 
-
 def print_device_info(device: dict):
     headers = [
         f"{BLUE}VENDOR{RESET}",

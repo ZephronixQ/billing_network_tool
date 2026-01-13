@@ -1,7 +1,6 @@
 from tabulate import tabulate
 from output.colors import BLUE, CYAN, MAGENTA, YELLOW, RESET
 
-
 def print_onu_detail_logs_table(logs: list):
     headers = [
         f"{BLUE}#{RESET}",

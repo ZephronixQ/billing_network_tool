@@ -2,7 +2,11 @@ import asyncio
 import logging
 
 from cli.args import parse_args
-from cli.help import print_help
+from cli.help import (
+    print_root_help,
+    print_gpon_help,
+    print_ipoe_help,
+)
 
 from core.operations.onu.uncfg import run_uncfg
 from core.operations.onu.search import run_sn_search, adapter, SEM, SWITCHES
@@ -12,19 +16,26 @@ from core.operations.onu.control.vendors.ZTE.conf_port import ZTEPortController
 
 logging.getLogger("telnetlib3").setLevel(logging.CRITICAL)
 
-
 def silent_asyncio_exception_handler(loop, context):
     exc = context.get("exception")
     if isinstance(exc, AssertionError):
         return
     loop.default_exception_handler(context)
 
-
 async def main():
     args = parse_args()
 
+# ───── CONTEXT HELP ─────
     if args.help:
-        print_help()
+        if args.gpon:
+            print_gpon_help()
+            return
+
+        if args.ipoe:
+            print_ipoe_help()
+            return
+
+        print_root_help()
         return
 
     # ───── IPOE MASS STATUS CHECK ─────
@@ -167,9 +178,6 @@ async def main():
             writer.close()
             await writer.wait_closed()
         return
-
-    # ───── HELP ─────
-    print_help()
 
 
 if __name__ == "__main__":

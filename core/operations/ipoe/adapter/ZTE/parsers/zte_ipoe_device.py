@@ -7,7 +7,6 @@ MODEL_PORT_MAP = {
     "3926":  {"fe": 24, "ge": 2},
 }
 
-
 def parse_zte_device_info(output: str) -> dict:
     model = "N/A"
 

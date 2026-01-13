@@ -1,7 +1,6 @@
 import re
 from .common import clean_line
 
-
 def parse_remote_onu_interface(output: str):
     operate = speed = "-"
 
@@ -18,7 +17,6 @@ def parse_remote_onu_interface(output: str):
         "operate": operate,
         "speed": speed,
     }
-
 
 def parse_interface_speed(output: str):
     input_rate_mbps = output_rate_mbps = 0.0

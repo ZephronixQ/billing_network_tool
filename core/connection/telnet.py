@@ -13,10 +13,8 @@ from config.secrets import TELNET_USERNAME, TELNET_PASSWORD, TELNET_PORT
 DEFAULT_PROMPT_RE = re.compile(r"\)#|\(cfg\)#|>\s*$")
 SNR_PROMPT_RE = re.compile(r"#\s*$")
 
-
 class TelnetConnectionError(Exception):
     pass
-
 
 # =========================
 # CONNECTION
@@ -51,7 +49,6 @@ async def connect(host: str):
     except OSError as e:
         raise TelnetConnectionError(f"Network error while connecting to {host}: {e}")
 
-
 # =========================
 # LOW LEVEL READ (FIXED)
 # =========================
@@ -65,10 +62,6 @@ async def read_until_prompt(
     handle_paging: bool = False,
     chunk_size: int = 4096,
 ) -> str:
-    """
-    Быстрое и безопасное чтение CLI до prompt.
-    """
-
     buf = ""
     deadline = time.monotonic() + timeout
 
@@ -97,7 +90,6 @@ async def read_until_prompt(
 
     return buf
 
-
 # =========================
 # GPON / LEGACY BULK
 # =========================
@@ -125,7 +117,6 @@ async def send_bulk(reader, writer, commands, timeout: float = 2.0) -> str:
 
     return buf
 
-
 # =========================
 # IPOE (PROMPT-BASED)
 # =========================
@@ -144,7 +135,6 @@ async def send_ipoe(
         writer.write(cmd + "\n")
         await writer.drain()
 
-        # ждём появления prompt
         chunk = await read_until_prompt(
             reader,
             writer,
@@ -220,14 +210,12 @@ PROMPT_RE = re.compile(r"[>#]\s*$")
 PAGER_RE = re.compile(r'CTRL\+C.*Quit', re.IGNORECASE)
 
 # ---------- CLEAN ----------
-
 def clean(line: str) -> str:
     line = ANSI_RE.sub('', line)
     line = re.sub(r"[^\x20-\x7E]+", " ", line)
     return line.strip()
 
 # ---------- READ ----------
-
 async def read_until_prompt_dlink(
     reader,
     writer=None,
@@ -264,7 +252,6 @@ async def read_until_prompt_dlink(
     return lines
 
 # ---------- SEND ----------
-
 async def send_ipoe_dlink(
     reader,
     writer,
@@ -283,7 +270,6 @@ async def send_ipoe_dlink(
             timeout=3.0,
             quiet=1.5,
         )
-
         output.extend(lines)
 
     return output

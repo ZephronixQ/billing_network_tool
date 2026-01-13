@@ -27,7 +27,6 @@ from core.operations.onu.parsers.speed import (
 from core.operations.onu.parsers.detail_logs import parse_onu_detail_logs
 from core.operations.onu.parsers.uncfg import parse_uncfg
 
-
 def extract_and_strip_ip_block(raw: str):
     from core.operations.onu.parsers.ip_status import parse_ip_status
 
@@ -50,7 +49,6 @@ def extract_and_strip_ip_block(raw: str):
     )
 
     return ip_service, raw_clean
-
 
 class ZteZxanOltAdapter:
     async def search_by_sn(self, host: str, serial: str):

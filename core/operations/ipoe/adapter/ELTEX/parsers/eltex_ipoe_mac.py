@@ -1,6 +1,5 @@
 import re
 
-
 def parse_mac_table(output: str) -> list[dict]:
     entries = []
 

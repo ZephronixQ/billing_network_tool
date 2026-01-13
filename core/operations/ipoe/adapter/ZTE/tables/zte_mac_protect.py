@@ -10,7 +10,6 @@ from output.colors import (
     RESET,
 )
 
-
 def print_mac_protect(data: dict):
     if not data or data.get("action") == "N/A":
         return

@@ -5,7 +5,6 @@ RX_RE  = re.compile(r"Rx\s*:?[\s]*(-?\d+(?:\.\d+)?)", re.I)
 TX_RE  = re.compile(r"Tx\s*:?[\s]*(-?\d+(?:\.\d+)?)", re.I)
 ATT_RE = re.compile(r"(\d+(?:\.\d+)?)\s*\(d[bB]\)", re.I)
 
-
 def parse_pon_power(output: str):
     if not output:
         return []

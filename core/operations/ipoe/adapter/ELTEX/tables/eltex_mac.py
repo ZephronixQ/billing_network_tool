@@ -1,7 +1,6 @@
 from output.colors import BLUE, CYAN, YELLOW, RESET
 from output.table_base import render_table
 
-
 def print_mac(macs: list[dict]):
     if not macs:
         print(f"\n{YELLOW}⚠ MAC не найдены{RESET}")

@@ -10,7 +10,6 @@ def mac_to_plain(mac: str) -> str:
 def normalize_port(port: str) -> str:
     return port if "/" in port else f"1/0/{port}"
 
-
 @staticmethod
 def parse_snr_device_model(raw: str):
     m = re.search(r"SNR-(S\d+[A-Z]*-\d+T)", raw)

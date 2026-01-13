@@ -23,12 +23,17 @@ billing_network_tool/
 ├── core/
 │   ├── connection/
 │   │   ├── __init__.py
-│   │   └── telnet.py
-│   │       # connect()
-│   │       # send_bulk()   (GPON)
-│   │       # send_ipoe()   (IPoE, prompt-based)
-│   │       # TelnetConnectionError
+│   │   └── telnet.p
 │   │
+│   ├── security/
+│   │   ├── gpon_conf_auth.py
+│   │   │   # validate_token()
+│   │   │
+│   │   ├── gpon_conf_logger.py
+│   │   │   # log_event()
+│   │   │
+│   │   └── gpon_conf_actions.log
+│   │       
 │   └── operations/
 │       │
 │       ├── info/
@@ -373,15 +378,6 @@ billing_network_tool/
 │           │
 │           ├── commands/
 │           │   └── zte_zxan.py
-│           │       # SHOW_BY_SN
-│           │       # SHOW_UNCFG
-│           │       # SHOW_ONU_CFG
-│           │       # SHOW_IP_SERVICE
-│           │       # SHOW_DHCP_SNOOPING
-│           │       # SHOW_PON_POWER
-│           │       # SHOW_STATUS
-│           │       # SHOW_INTERFACE
-│           │       # SHOW_DETAIL_LOGS
 │           │
 │           ├── parsers/
 │           │   ├── __init__.py
@@ -427,8 +423,21 @@ billing_network_tool/
 │           │   └── detail_logs.py
 │           │       # print_detail_logs()
 │           │
-│           └── __init__.py
-│
+│           └── control/
+│               ├── base.py
+│               │   # BaseGPONController
+│               │
+│               ├── factory.py
+│               │   # get_controller(vendor, reader, writer)
+│               │
+│               └── vendors/
+│                   └── SNR/
+│                       ├── conf_port.py
+│                       |   # ZTEPortController
+|                       |
+│                       └── olt_conf_port.py
+│                           # ZTEInterfaceController
+|
 ├── output/
 │   ├── __init__.py
 │   ├── colors.py

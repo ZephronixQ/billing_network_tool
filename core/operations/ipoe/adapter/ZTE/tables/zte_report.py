@@ -1,12 +1,9 @@
-# ipoe/adapter/ZTE/tables/zte_report.py
-
 from core.operations.ipoe.adapter.ZTE.tables.zte_device import print_device_info
 from core.operations.ipoe.adapter.ZTE.tables.zte_port_status import print_port_status
 from core.operations.ipoe.adapter.ZTE.tables.zte_mac import print_mac_table
 from core.operations.ipoe.adapter.ZTE.tables.zte_dhcp import print_dhcp
 from core.operations.ipoe.adapter.ZTE.tables.zte_logs import print_logs
 from core.operations.ipoe.adapter.ZTE.tables.zte_mac_protect import print_mac_protect
-
 
 def print_zte_report(
     *,
@@ -20,7 +17,6 @@ def print_zte_report(
     mac_protect: dict | None,
 ) -> None:
     print_device_info(device)
-
     print_port_status(
         port=port,
         info=port_info,
@@ -51,5 +47,4 @@ def print_zte_report(
         else None
     )
     print_dhcp(dhcp_entry)
-
     print_logs(logs)

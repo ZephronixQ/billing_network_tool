@@ -1,10 +1,8 @@
 from output.colors import BLUE, CYAN, MAGENTA, YELLOW, RESET, GREEN
 from output.table_base import render_table
 
-
 def _c(val: str, color: str) -> str:
     return f"{color}{val}{RESET}"
-
 
 def print_mac(mac: dict | None):
     headers = [

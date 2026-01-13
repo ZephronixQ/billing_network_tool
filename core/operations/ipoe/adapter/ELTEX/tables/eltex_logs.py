@@ -1,14 +1,9 @@
-# core/operations/ipoe/adapter/ELTEX/tables/eltex_logs.py
-
 from output.colors import BLUE, CYAN, GREEN, RED, RESET
 from output.table_base import render_table
-
 import re
-
 
 def _c(val: str, color: str) -> str:
     return f"{color}{val}{RESET}"
-
 
 LOG_RE = re.compile(
     r"""
@@ -19,7 +14,6 @@ LOG_RE = re.compile(
     """,
     re.VERBOSE | re.IGNORECASE,
 )
-
 
 def print_logs(logs: list[str]):
     title = f"\n{CYAN}📜 DEVICE LOGS (MAX LINES = 200){RESET}"

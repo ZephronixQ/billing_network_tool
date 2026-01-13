@@ -1,7 +1,6 @@
 from output.colors import BLUE, GREEN, RED, RESET
 from output.table_base import render_table
 
-
 def _status(val: str) -> str:
     color = GREEN if val == "up" else RED
     return f"{color}{val.upper()}{RESET}"

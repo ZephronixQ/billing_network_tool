@@ -1,4 +1,3 @@
-# renderer_base.py
 from abc import ABC, abstractmethod
 
 class BaseIPoERenderer(ABC):

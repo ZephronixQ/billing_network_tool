@@ -5,7 +5,6 @@ from core.operations.ipoe.adapter.ELTEX.constants import (
     SPEED_NO_SFP,
 )
 
-
 def parse_device(output: str) -> dict:
     m = MODEL_RE.search(output)
     if not m:

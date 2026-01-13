@@ -1,5 +1,3 @@
-# core/operations/onu/control/vendors/ZTE/olt_conf_port.py
-
 import asyncio
 from core.connection.telnet import send_ipoe
 from core.security.gpon_conf_auth import validate_token
@@ -8,7 +6,6 @@ from config.secrets import SWITCHES
 
 class ZTEInterfaceController:
     vendor = "ZTE"
-
     def __init__(self, reader, writer, host: str, interface: str, user_token: str):
         self.reader = reader
         self.writer = writer
@@ -53,7 +50,6 @@ class ZTEInterfaceController:
             await send_ipoe(self.reader, self.writer, commands)
             await asyncio.sleep(0.5)
 
-            # --- Логирование ---
             log_event(
                 f"User: {self.user} | Host: {self.host} | Interface: {self.interface} | Action: {action}"
             )

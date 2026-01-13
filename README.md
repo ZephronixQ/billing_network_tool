@@ -1,140 +1,70 @@
-# billing_network_tool
+# Проект "Billing Network Tool"
 
-Асинхронный CLI-инструмент для диагностики и управления оборудованием доступа
-(**GPON / IPoE**), ориентированный на **стабильную работу в одной Telnet-сессии**
-и **строго контролируемое выполнение команд**.
+## Цель и описание
 
-Проект предназначен для эксплуатации в сетях доступа и решает задачи:
+**Billing Network Tool** — учебно-практический асинхронный CLI-инструмент для диагностики и управления оборудованием доступа (**GPON / IPoE**), ориентированный на **стабильную работу в одной Telnet-сессии** и **строго контролируемое выполнение команд**.  
 
-* оперативной диагностики **ONU (OLT)**
-* диагностики и **ограниченного управления IPoE-коммутаторами**
-* безопасного выполнения `set`-операций через CLI
+Проект помогает:
 
----
+* автоматизировать сетевые операции (GPON, OLT, ONU, IPOE);
+* взаимодействовать с сетевым оборудованием через Telnet/CLI;
+* структурировать код и использовать модульный подход;
+* работать с логами, диагностикой и мониторингом сетевых компонентов.
 
-## Основные возможности
+Проект предназначен для инженеров, которые хотят перейти от ручного администрирования к программному управлению сетями с использованием Python и современных инженерных практик.
 
-### GPON (ONU / OLT)
-
-* Поиск ONU по серийному номеру
-* Определение PON-порта подключения
-* Сбор IP-статуса (IP / MAC / VLAN)
-* Анализ DHCP snooping
-* Получение оптических уровней (PON power)
-* Определение статуса ONU и интерфейса
-* Определение скорости и трафика
-* Получение детальных логов (authpass / offline / cause)
+[![Latest Version](https://img.shields.io/github/tag/ZephronixQ/billing_network_tool.svg)](https://github.com/ZephronixQ/billing_network_tool/releases)
+[![Download Count](https://img.shields.io/github/downloads/ZephronixQ/billing_network_tool/total)](https://github.com/ZephronixQ/billing_network_tool/releases)
+[![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://github.com/ZephronixQ/billing_network_tool/tree/main/docs)
 
 ---
 
-### IPoE (Access Switch)
+### Поддерживаемое оборудование
 
-#### Диагностика (read-only)
+**GPON:**
 
-* Vendor detect по CLI
-* Получение информации об устройстве
-* Статус и параметры порта
-* MAC-таблица
-* DHCP relay / snooping
-* Port utilization / counters
-* MAC-protect / security
-* Просмотр логов устройства
+* ZTE ZXAN OLT (модели C300 и C320)
 
-#### Управление портом (controlled set)
+**IPoE:**
 
-* Enable / Disable порта
-* Restart порта
-* Установка скорости порта (10 / 100)
+* DLINK (DGS-1100-10/ME, DES-1210-28/ME)
+* ELTEX (MES2348B, MES1124MB)
+* SNR (S2965-8T, S2965-24T, S2985G-24T, S2985G-48T, S2990G-48T)
+* ZTE (ZXR10-2992E)
 
-Все управляющие операции:
-
-* выполняются **только по явным CLI-флагам**
-* требуют **явного входа в privileged-mode**
-* изолированы от read-only логики
+> Поддержка охватывает диагностику (read-only) и контролируемое управление портами для всех перечисленных моделей.
 
 ---
 
-## Ключевые архитектурные принципы
+### Принципы работы
 
-### 1. One Session – One Request
-
-* **GPON**
-  После определения ONU-интерфейса все команды выполняются **одним `send_bulk`**,
-  все парсеры работают по **единому `raw_all` буферу**.
-
-* **IPoE**
-  Все команды (включая `set`) выполняются **в рамках одной Telnet-сессии**,
-  без переподключений и повторных логинов.
-
-Это устраняет:
-
-* race condition
-* потерю CLI-вывода
-* нестабильность prompt
-* зависимость от порядка команд
-
----
-
-### 2. Отсутствие повторных запросов
-
-Проект **принципиально не использует**:
-
-* retry-циклы
-* sleep-based polling
-* повторные Telnet-подключения
-
-Стабильность достигается за счёт:
-
-* prompt-based чтения
-* строгой синхронизации CLI
-* явного контроля состояний (`>`, `#`, `(cfg)#`)
-
----
-
-### 3. Чёткое разделение ответственности
-
-* `connection/` — Telnet, таймауты, ожидание prompt
-* `commands/` — **только CLI-команды**
-* `query/` — планы выполнения команд
-* `parsers/` — **только парсинг текста**
-* `tables/` — форматированный вывод
-* `adapter/` — orchestration логика (read-only)
-* `control/` — **управление портами (set-операции)**
-* `render/` — финальный вывод данных
-* `service.py` — high-level workflow
-* `main.py` — CLI / аргументы / запуск сценариев
-
----
-
-## Архитектура проекта
-
-Полная актуальная схема проекта находится здесь:
-
-📄 **[cheme.txt](./cheme.txt)**
-
-(включает GPON + IPoE, adapters, parsers, tables, render и vendor-логику)
-
----
-
-## Установка зависимостей
-
-Проект использует стандартный набор Python-библиотек, указанный в `requirements.txt`.
-
-```bash
-pip install -r requirements.txt
-```
-
+* **One Session – One Request:** все команды выполняются в рамках одной Telnet-сессии без переподключений.
+* **Строгий контроль CLI prompt** (`>`, `#`, `(cfg)#`) для корректного чтения вывода.
+* **Отсутствие повторных retry-циклов и sleep-based polling.**
+* **Разделение read-only и контролируемых операций** — изменения конфигурации выполняются только при явном подтверждении и поддерживаются для всех вендоров через единый интерфейс управления.
+* **Безопасность и стабильность:** операции, влияющие на конфигурацию или состояние оборудования, изолированы от диагностических команд.
+* 
 ---
 
 ## Использование
 
-### Информационное окно проекта
+1. Склонируйте репозиторий:
 
-#### С информационным окном о допустимых флагах и команд можно ознакомиться с помощью команды:
+    ```bash
+    git clone https://github.com/ZephronixQ/billing_network_tool.git
+    ```
 
-```bash
-python3 main.py --help
-```
+2. Установите зависимости:
+
+    ```bash
+    python3 -m pip install -r requirements.txt
+    ```
+
+3. Ознакомьтесь с доступными командами проекта:
+
+    ```bash
+    python3 main.py --help
+    ```
 
 ---
 
@@ -148,9 +78,7 @@ python3 main.py --gpon XCTFAF21084E
 
 Полный вывод диагностического окна GPON находится здесь:
 
-📄 **[gpon_output.md](./gpon_output.md)**
-
----
+📄 **[gpon_output.md](./docs/gpon_output.md)**
 
 ### IPoE — диагностика (read-only)
 
@@ -158,104 +86,86 @@ python3 main.py --gpon XCTFAF21084E
 python3 main.py --ipoe 192.168.1.24 11
 ```
 
-Полный вывод диагностического окна IPoe ZTE находится здесь:
+Полный вывод диагностического окна IPoE:
 
-📄 **[ipoe_output.md](./ipoe_output.md)**
+📄 **[ipoe_output.md](./docs/ipoe_output.md)**
 
-
----
-
-### IPoE — управление портом (set)
-
-#### Отключение порта
-
-```bash
-python3 main.py --ipoe 192.168.1.24 11 --disable
-```
-
-#### Включение порта
-
-```bash
-python3 main.py --ipoe 192.168.1.24 11 --enable
-```
-
-#### Перезапуск порта
+### IPoe — управление интерфейсом
 
 ```bash
 python3 main.py --ipoe 192.168.1.24 11 --restart
+python3 main.py --ipoe 192.168.1.24 11 --disable
+python3 main.py --ipoe 192.168.1.24 11 --enable
 ```
 
-#### Установление скорости порта
+### GPON — управление интерфейсом
 
 ```bash
-python3 main.py --ipoe 192.168.1.24 11 --speed 10
+python3 main.py --gpon GPON00D758A0 --restart
+python3 main.py --gpon GPON00D758A0 --disable
+python3 main.py --gpon GPON00D758A0 --enable
+python3 main.py --gpon GPON00D758A0 --remove
 ```
+
+#### Конфигурация через CLI:
 
 ```bash
-python3 main.py --ipoe 192.168.1.24 11 --speed 100
+python3 main.py --gpon-conf --user Admin13012026 --olt 192.11.2.16 --interface 1/1/9 --enable
 ```
 
----
+Действия логируются в `core/security/gpon_conf_actions.log`. Допустимые пользователи определены в `core/security/gpon_conf_auth.py`.
 
-## Privileged-mode (ZTE)
+### Информационный статус
 
-Для выполнения `set`-команд ZTE-устройства требуют входа в privileged-mode:
+**GPON:**
 
-```text
-> en
-password:
-(cfg)#
+```bash
+python3 main.py --gpon-info-status --patch device
 ```
 
-Особенности реализации:
+**IPoE:**
 
-* пароль **может быть пустым**
-* вход в `enable` выполняется **один раз за сессию**
-* наличие `(cfg)#` проверяется явно
-* при неудаче выполнение `set` прерывается
+```bash
+python3 main.py --ipoe-info-status --patch device
+```
 
-Это предотвращает:
+Результаты сохраняются в:
 
-* случайное выполнение команд
-* зависание CLI
-* неконтролируемые изменения конфигурации
+* `core/operations/info/output/gpon_status_result.txt`
+* `core/operations/info/output/ipoe_status_result.txt`
 
----
+Полный вывод окна информационного статуса:
 
-## Поддерживаемое оборудование
-
-### GPON
-
-* ZTE ZXAN OLT
-* GPON ONU
-
-### IPoE
-
-* ZTE Access Switch (IPoE)
+📄 **[info_status.md](./docs/info_status.md)**
 
 ---
 
-## Обработка ошибок
+## Архитектура проекта
 
-* Недоступный хост
-* Таймаут соединения
-* Refused connection
-* Неопознанный вендор
-* Отсутствие privileged-prompt
-* Пустой или неполный CLI-вывод
+Полная актуальная схема проекта находится здесь:
 
-Все ошибки обрабатываются **до начала парсинга или выполнения set-команд**.
+📄 **[cheme.txt](./cheme.txt)**
+
+(включает GPON + IPoE, adapters, parsers, tables, render и vendor-логику)
 
 ---
 
-## Ограничения
+## Лицензия
 
-* Проект ориентирован на **ZTE CLI**
-* Для добавления новых вендоров требуется:
+См. файл [LICENSE](LICENSE) для информации о лицензии.
 
-  * vendor detect
-  * control-controller
-  * commands / query
-  * parsers / tables
+## Вклад
 
----
+Прочитайте [CONTRIBUTING.md](CONTRIBUTING.md) для информации о том, как внести вклад в проект.
+
+## Журнал изменений
+
+См. файл [CHANGELOG.md](docs/CHANGELOG.md) для истории изменений.
+
+## Список задач
+
+См. файл [TODO.md](docs/TODO.md) для текущих задач и планов развития.
+
+## Кодекс поведения
+
+Участвуя в проекте, вы соглашаетесь соблюдать наш [кодекс поведения](CODE_OF_CONDUCT.md).

@@ -1,12 +1,8 @@
-# core/operations/ipoe/adapter/SNR/tables/snr_logs.py
-
 from output.colors import BLUE, CYAN, GREEN, RED, RESET
 from output.table_base import render_table
 
-
 def _c(val: str, color: str) -> str:
     return f"{color}{val}{RESET}"
-
 
 def print_logs(logs: list[str]):
     title = f"\n{CYAN}📜 DEVICE LOGS (MAX LINES = 200){RESET}"

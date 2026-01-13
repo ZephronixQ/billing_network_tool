@@ -3,7 +3,6 @@ from core.operations.ipoe.detect_vendor import detect_vendor
 from core.operations.ipoe.adapter.factory import get_adapter
 from core.operations.ipoe.render.renderer_factory import get_renderer
 
-
 async def run_ipoe(host: str, port: str):
     try:
         reader, writer = await connect(host)

@@ -1,7 +1,6 @@
 from output.colors import GREEN, BLUE, YELLOW, MAGENTA, RED, RESET
 from output.table_base import render_table
 
-
 def print_dhcp(dhcp_entry: dict | None):
     headers = [
         f"{BLUE}IP ADDRESS{RESET}",

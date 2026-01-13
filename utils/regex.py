@@ -7,7 +7,6 @@ UNCFG_ONU = re.compile(
     re.I
 )
 
-
 ZTE_DEVICE_RE = re.compile(r'ZXR10|ZTE\s+Corporation|ZXAN', re.I)
 
 def is_zte_device(output: str) -> bool:

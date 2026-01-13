@@ -5,7 +5,6 @@ from core.operations.ipoe.adapter.ELTEX.constants import (
     DEFAULT_LOG_LINES,
 )
 
-
 def parse_logs(
     output: str,
     short_port: str,

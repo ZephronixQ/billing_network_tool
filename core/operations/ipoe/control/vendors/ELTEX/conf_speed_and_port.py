@@ -1,14 +1,10 @@
 import asyncio
-
 from core.connection.telnet import send_ipoe
 from core.operations.ipoe.control.base import BaseIPoEController
-from core.operations.ipoe.adapter.ELTEX.parsers.eltex_ipoe_interface import (
-    resolve_eltex_interface,
-)
+from core.operations.ipoe.adapter.ELTEX.parsers.eltex_ipoe_interface import resolve_eltex_interface
 
 class ELTEXPortController(BaseIPoEController):
     vendor = "ELTEX"
-
     VALID_SPEEDS = {
         "10",
         "100",
@@ -21,7 +17,6 @@ class ELTEXPortController(BaseIPoEController):
         self._enabled = False
         self.model: str | None = None
 
-    # model может быть установлен, но НЕ обязателен
     def set_model(self, model: str):
         self.model = model
 
@@ -46,7 +41,6 @@ class ELTEXPortController(BaseIPoEController):
 
     async def _enter_interface(self, port: int | str):
         port = int(port)
-
         # --------------------------------------------------
         # 🚫 Запрет service / uplink портов
         # --------------------------------------------------
@@ -82,7 +76,6 @@ class ELTEXPortController(BaseIPoEController):
                 ]
             )
 
-            # если FE существует — используем его
             if "(config-if)" in output:
                 return
 

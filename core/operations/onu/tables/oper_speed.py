@@ -3,7 +3,6 @@ from output.colors import (
 )
 from output.table_base import render_table
 
-
 def print_oper_speed_table(remote_onu: dict, iface_speed: dict):
     headers = [
         f"{BLUE}Operate status{RESET}",

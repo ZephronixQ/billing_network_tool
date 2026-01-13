@@ -5,10 +5,8 @@ import subprocess
 import platform
 from collections import defaultdict
 from datetime import datetime
-
 from tqdm import tqdm
 from tabulate import tabulate
-
 
 # ----------------- Извлечение IP -----------------
 def extract_ips(file_path: Path) -> list[str]:
@@ -22,7 +20,6 @@ def extract_ips(file_path: Path) -> list[str]:
                     ips.add(ip)
 
     return list(ips)
-
 
 # ----------------- Ping -----------------
 def ping_ip(ip: str, timeout: int) -> tuple[str, str]:
@@ -42,11 +39,9 @@ def ping_ip(ip: str, timeout: int) -> tuple[str, str]:
     except Exception:
         return ip, "DOWN"
 
-
 # ----------------- Helpers -----------------
 def ip_key(ip: str):
     return tuple(map(int, ip.split(".")))
-
 
 def generate_subnet_tables(results: list[tuple[str, str]]) -> str:
     subnets = defaultdict(list)
@@ -62,7 +57,6 @@ def generate_subnet_tables(results: list[tuple[str, str]]) -> str:
         down = [ip for ip, s in items if s == "DOWN"]
 
         out.append(f"\n[*] {subnet} ({len(items)} IP: {len(up)} UP, {len(down)} DOWN)")
-
         rows = []
         for i in range(max(len(up), len(down))):
             rows.append([
@@ -82,7 +76,6 @@ def generate_subnet_tables(results: list[tuple[str, str]]) -> str:
         )
 
     return "\n".join(out)
-
 
 # ----------------- PUBLIC ENTRYPOINT -----------------
 def run_ipoe_info_status(

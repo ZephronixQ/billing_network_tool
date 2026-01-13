@@ -3,7 +3,6 @@ import asyncio
 from core.connection.telnet import send_ipoe
 from core.operations.ipoe.control.base import BaseIPoEController
 
-
 class ZTEPortController(BaseIPoEController):
     vendor = "ZTE"
 
@@ -36,7 +35,6 @@ class ZTEPortController(BaseIPoEController):
             )
 
         self._enabled = True
-
 
     async def collect(self, port: str) -> dict:
         return {}

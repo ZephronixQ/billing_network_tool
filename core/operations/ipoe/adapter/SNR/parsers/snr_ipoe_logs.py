@@ -1,5 +1,3 @@
-# core/operations/ipoe/adapter/SNR/logs.py
-
 import re
 
 from core.connection.telnet import read_until_prompt, SNR_PROMPT_RE
@@ -7,7 +5,6 @@ from core.operations.ipoe.adapter.SNR.commands import (
     SHOW_LOGGING_FLASH,
     SHOW_LOGGING_INCLUDE,
 )
-
 
 async def snr_collect_logs(
     reader,

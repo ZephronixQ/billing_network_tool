@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 
-
 class BaseIPoEController(ABC):
     vendor: str
 
