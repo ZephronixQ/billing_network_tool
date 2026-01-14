@@ -1,4 +1,4 @@
-from output.colors import GREEN, BLUE, YELLOW, MAGENTA, RED, RESET
+from output.colors import GREEN, BLUE, YELLOW, MAGENTA, RED, CYAN, RESET
 from output.table_base import render_table
 
 def print_dhcp(dhcp_entry: dict | None):
@@ -20,6 +20,15 @@ def print_dhcp(dhcp_entry: dict | None):
             headers,
             title=f"\n{RED}❌ DHCP NOT FOUND{RESET}",
         )
+
+        # Возможные причины и рекомендации
+        dhcp_info = [
+            f"{YELLOW}Возможные причины:{RESET}",
+            f"{YELLOW}- Проблемы с клиентским роутером{RESET}",
+            f"{YELLOW}- VLAN на порту не соответствует DHCP пулу{RESET}",
+
+        ]
+        print("\n".join(dhcp_info))
         return
 
     rows = [[

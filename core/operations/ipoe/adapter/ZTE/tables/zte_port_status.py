@@ -23,6 +23,21 @@ def print_port_status(port: str, info: dict, traffic: dict | None = None):
             _c(speed, MAGENTA),
         ]]
 
+        # Добавляем возможные причины для DOWN
+        down_info = [
+            f"{RED}❗ Порт не подключен к сети{RESET}",
+            f"{YELLOW}- Возможна проблема с кабелем{RESET}",
+            f"{YELLOW}- Возможно отключение на стороне абонента{RESET}",
+            f"{YELLOW}- Возможный сбой оборудования{RESET}",
+        ]
+        # Выводим таблицу
+        render_table(
+            rows,
+            headers,
+            title=f"\n{RED}🔌 PORT STATUS{RESET}",
+        )
+        print("\n".join(down_info))
+
     else:
         input_rate = traffic.get("input", "-") if traffic else "-"
         output_rate = traffic.get("output", "-") if traffic else "-"
@@ -43,8 +58,8 @@ def print_port_status(port: str, info: dict, traffic: dict | None = None):
             _c(output_rate, CYAN),
         ]]
 
-    render_table(
-        rows,
-        headers,
-        title=f"\n{RED}🔌 PORT STATUS{RESET}",
-    )
+        render_table(
+            rows,
+            headers,
+            title=f"\n{RED}🔌 PORT STATUS{RESET}",
+        )

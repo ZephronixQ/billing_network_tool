@@ -29,22 +29,26 @@ def print_zte_report(
 
     print_mac_protect(mac_protect)
 
-    mac_entry = next(
-        (m for m in mac if m["port"] == port),
-        None,
-    )
-    print_mac_table(mac_entry)
+    # ==== Исправленный блок для отображения всех MAC на порту ====
+    mac_entries = [m for m in mac if m["port"] == port]
 
-    dhcp_entry = (
-        next(
-            (
-                d for d in dhcp
-                if d["mac_plain"] == mac_entry["mac_plain"]
-            ),
+    if not mac_entries:
+        print_mac_table(None)
+
+    elif len(mac_entries) == 1:
+        print_mac_table(mac_entries[0])
+
+    else:
+        print_mac_table(mac_entries)
+    # =============================================================
+
+    # DHCP — привязываем только если MAC один
+    dhcp_entry = None
+    if len(mac_entries) == 1:
+        dhcp_entry = next(
+            (d for d in dhcp if d["mac_plain"] == mac_entries[0]["mac_plain"]),
             None,
         )
-        if mac_entry
-        else None
-    )
+
     print_dhcp(dhcp_entry)
     print_logs(logs)
