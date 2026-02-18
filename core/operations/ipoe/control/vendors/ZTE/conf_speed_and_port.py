@@ -1,5 +1,4 @@
 import asyncio
-
 from core.connection.telnet import send_ipoe
 from core.operations.ipoe.control.base import BaseIPoEController
 
@@ -18,7 +17,6 @@ class ZTEPortController(BaseIPoEController):
             self.reader,
             self.writer,
             ["en"],
-            timeout=1.0
         )
 
         if "password" in output.lower():
@@ -26,7 +24,6 @@ class ZTEPortController(BaseIPoEController):
                 self.reader,
                 self.writer,
                 [""],
-                timeout=1.0
             )
 
         if "(cfg)#" not in output and "#" not in output:
