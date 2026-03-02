@@ -14,7 +14,7 @@
 Проект предназначен для инженеров, которые хотят перейти от ручного администрирования к программному управлению сетями с использованием Python и современных инженерных практик.
 
 [![Latest Version](https://img.shields.io/github/tag/ZephronixQ/billing_network_tool.svg)](https://github.com/ZephronixQ/billing_network_tool/releases)
-[![Download Count](https://img.shields.io/github/downloads/ZephronixQ/billing_network_tool/total)](https://github.com/ZephronixQ/billing_network_tool/releases)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/ZephronixQ/billing_network_tool/blob/main/LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://github.com/ZephronixQ/billing_network_tool/tree/main/docs)
 
 ---
